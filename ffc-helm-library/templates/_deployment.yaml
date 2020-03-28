@@ -52,10 +52,7 @@ spec:
             cpu: {{ quote .Values.container.requestCpu }}
           limits:
             memory: {{ quote .Values.container.limitMemory }}
-            cpu: {{ quote .Values.container.limitCpu }}        
-          initialDelaySeconds: {{ .Values.deployment.initialDelaySeconds }}
-          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            cpu: {{ quote .Values.container.limitCpu }}
 {{- end }}
 {{- define "ffc-helm-library.deployment" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
