@@ -29,10 +29,10 @@ secret:
 service:
   type: ClusterIP
 
-# Required for all ServiceAccount resources
-serviceAccount:
-  name: ffc-demo-web-service-account
-  role:Arn:
+# Required for all Postgres Service resources
+postgresHost: host
+postgresExternalName: server
+postgresPort: 5432
 
 # Required for all deployment resources with pods
 deployment:
