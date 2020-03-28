@@ -3,7 +3,8 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: {{ quote .Values.name }}
-  labels: {{ include "ffc-demo.labels" . | trimSuffix "\n" | indent 2 }}
+  labels:
+    {{- include "ffc-helm-library.labels" . | nindent 4 }}
   namespace: {{ quote .Values.namespace }}
 spec:
   replicas: {{ .Values.replicas }}
@@ -11,11 +12,11 @@ spec:
   strategy: {}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ quote .Values.name }}
-      app: {{ quote .Values.namespace }}
+      {{- include "ffc-helm-library.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels: {{ include "ffc-demo.labels" . | trimSuffix "\n" | indent 6 }}
+      labels:
+        {{- include "ffc-helm-library.labels" . | nindent 8 }}
       namespace: {{ quote .Values.namespace }}
       annotations:
         redeployOnChange: {{ quote .Values.container.redeployOnChange }}

@@ -12,15 +12,15 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
   name: {{ quote .Values.name }}
   namespace: {{ quote .Values.namespace }}
-  labels: {{ include "ffc-demo.labels" . | trimSuffix "\n" | indent 2 }}
+  labels:
+    {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
   ports:
   - name: http
     port: {{ .Values.service.port }}
     targetPort: http
   selector:
-    app.kubernetes.io/name: {{ quote .Values.name }}
-    app: {{ quote .Values.namespace }}
+    {{- include "ffc-helm-library.selectorLabels" . | nindent 4 }}
   type: {{ quote .Values.service.type }}
 {{- end -}}
 {{- define "ffc-helm-library.service" -}}

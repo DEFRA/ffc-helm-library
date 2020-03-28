@@ -4,7 +4,8 @@ kind: RoleBinding
 metadata:
   name: {{ .Values.name }}-developer-1-admin-rolebinding
   namespace: {{ .Values.namespace }}
-  labels: {{ include "ffc-demo.labels" . | trimSuffix "\n" | indent 2 }}
+  labels:
+    {{- include "ffc-helm-library.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
