@@ -53,7 +53,7 @@ spec:
           limits:
             memory: {{ quote .Values.container.limitMemory }}
             cpu: {{ quote .Values.container.limitCpu }}        
-          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          initialDelaySeconds: {{ .Values.deployment.initialDelaySeconds }}
           periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
 {{- end }}
