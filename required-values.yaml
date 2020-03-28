@@ -1,0 +1,55 @@
+# Shows minimum values that need defining in a Helm values.yaml file
+# Actual values are for example only
+
+# Required for all resources
+environment: development
+name: ffc-demo-web
+namespace: ffc-demo
+image: ffc-demo-web
+workstream: ffc-demo
+
+# Required for all resources
+labels:
+  instance:
+  version: 1.0.0
+  component: service
+
+# Required for all ingress resources
+ingress:
+  class: nginx
+  endPoint: ffc-demo
+  server:
+
+# Required for charts defining a single secret
+secret:
+  name: ffc-demo-basic-auth
+  type: Opaque
+
+# Required for all Service resources
+service:
+  type: ClusterIP
+
+# Required for all ServiceAccount resources
+serviceAccount:
+  name: ffc-demo-web-service-account
+
+# Required for all deployment resources with pods
+deployment:
+  restartPolicy: Always
+  priorityClassName: low
+  replicas: 1
+  minReadySeconds: 5
+  redeployOnChange: update this field to force a change
+  imagePullSecret:
+
+# Required for all deployment resources with pod container
+container:
+  imagePullPolicy: IfNotPresent
+  requestMemory: 60Mi
+  requestCpu: 60m
+  limitMemory: 80Mi
+  limitCpu: 80m
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
