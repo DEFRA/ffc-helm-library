@@ -8,6 +8,11 @@ namespace: ffc-demo
 image: ffc-demo-web
 workstream: ffc-demo
 
+# Required for all resources
+labels:
+  instance:
+  version: 1.0.0
+
 # Required for all ingress resources
 ingress:
   class: nginx
