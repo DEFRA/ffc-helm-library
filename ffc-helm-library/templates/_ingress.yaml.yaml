@@ -1,4 +1,4 @@
-{{- define "ffc-helm-library.rolebinding.tpl" -}}
+{{- define "ffc-helm-library.ingress.tpl" -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:

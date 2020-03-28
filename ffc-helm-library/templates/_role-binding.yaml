@@ -1,4 +1,4 @@
-{{- define "ffc-helm-library.rolebinding.tpl" -}}
+{{- define "ffc-helm-library.role-binding.tpl" -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -15,6 +15,6 @@ subjects:
   kind: User
   name: {{ .Values.workstream }}-developer-1
 {{- end -}}
-{{- define "ffc-helm-library.rolebinding" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.rolebinding.tpl") -}}
+{{- define "ffc-helm-library.role-binding" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.role-binding.tpl") -}}
 {{- end -}}
