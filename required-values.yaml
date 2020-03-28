@@ -41,6 +41,7 @@ deployment:
   minReadySeconds: 5
   redeployOnChange: update this field to force a change
   imagePullSecret:
+  initialDelaySeconds: 30
 
 # Required for all deployment resources with pod container
 container:
