@@ -1,0 +1,28 @@
+{{- define "ffc-helm-library.service.tpl" -}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  {{- if .Values.ingress.alb }}
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server}}
+  {{- end }}
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+  name: {{ quote .Values.name }}
+  namespace: {{ quote .Values.namespace }}
+  labels: {{ include "ffc-demo.labels" . | trimSuffix "\n" | indent 2 }}
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.service.port }}
+    targetPort: http
+  selector:
+    app.kubernetes.io/name: {{ quote .Values.name }}
+    app: {{ quote .Values.namespace }}
+  type: {{ quote .Values.service.type }}
+{{- end -}}
+{{- define "ffc-helm-library.service" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.service.tpl") -}}
+{{- end -}}
