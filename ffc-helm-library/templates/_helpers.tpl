@@ -5,8 +5,8 @@ Common labels
 app: {{ quote .Values.namespace }}
 app.kubernetes.io/name: {{ quote .Values.name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/version: {{ quote .Values.labels.version }}
-app.kubernetes.io/component: {{ quote .Values.labels.component }}
+app.kubernetes.io/version: {{ quote .Values.labels.version | default "1.0.0" }}
+app.kubernetes.io/component: {{ quote .Values.labels.component | default "service" }}
 app.kubernetes.io/part-of: {{ quote .Values.namespace }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
