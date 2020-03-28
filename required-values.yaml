@@ -32,6 +32,7 @@ service:
 # Required for all ServiceAccount resources
 serviceAccount:
   name: ffc-demo-web-service-account
+  role:Arn:
 
 # Required for all deployment resources with pods
 deployment:
