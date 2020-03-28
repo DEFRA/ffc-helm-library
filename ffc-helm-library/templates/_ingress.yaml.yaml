@@ -20,7 +20,7 @@ spec:
       - path: /?(.*)
         backend:
           serviceName: {{ quote .Values.name }}
-          servicePort: {{ .Values.service.port }}
+          servicePort: {{ .Values.container.port }}
 {{- end }}
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
