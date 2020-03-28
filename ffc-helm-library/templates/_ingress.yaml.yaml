@@ -1,5 +1,4 @@
 {{- define "ffc-helm-library.rolebinding.tpl" -}}
-{{- if not .Values.ingress.alb }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -37,7 +36,6 @@ spec:
         backend:
           serviceName: {{ quote .Values.name }}
           servicePort: {{ .Values.service.port }}
-{{- end }}
 {{- end }}
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
