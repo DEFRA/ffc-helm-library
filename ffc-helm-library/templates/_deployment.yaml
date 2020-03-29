@@ -28,31 +28,8 @@ spec:
       - name: {{ quote .Values.deployment.imagePullSecret }}
       {{- end }}
       containers:
-      - name: {{ quote .Values.name }}
-        image: {{ quote .Values.image }}
-        {{- if .Values.container.command }}
-        {{- with .Values.container.command }}
-        command:
-          {{- toYaml . | nindent 12 }}
-        {{- end }}
-        {{- with .Values.container.args }}
-        args:
-          {{- toYaml . | nindent 12 }}
-        {{- end }}
-        {{- end }}
-        imagePullPolicy: {{ quote .Values.container.imagePullPolicy }}
-        securityContext:
-          runAsUser: {{ .Values.container.runAsUser }}
-          runAsNonRoot: {{ .Values.container.runAsNonRoot }}
-          readOnlyRootFilesystem: {{ .Values.container.readOnlyRootFilesystem }}
-          allowPrivilegeEscalation: {{ .Values.container.allowPrivilegeEscalation }}        
-        resources:
-          requests:
-            memory: {{ quote .Values.container.requestMemory }}
-            cpu: {{ quote .Values.container.requestCpu }}
-          limits:
-            memory: {{ quote .Values.container.limitMemory }}
-            cpu: {{ quote .Values.container.limitCpu }}
+      - 
+{{ include "ffc-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
 {{- define "ffc-helm-library.deployment" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
