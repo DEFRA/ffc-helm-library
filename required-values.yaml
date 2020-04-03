@@ -29,9 +29,10 @@ service:
   type: ClusterIP
 
 # Required for all Postgres Service resources
-postgresHost: host
-postgresExternalName: server
-postgresPort: 5432
+postgresService:
+  postgresHost: host
+  postgresExternalName: server
+  postgresPort: 5432
 
 # Required for all deployment resources with pods
 deployment:
