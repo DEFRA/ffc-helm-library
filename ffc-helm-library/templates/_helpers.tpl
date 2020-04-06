@@ -22,11 +22,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-Required value message
+Apply required check for a value and output message if value is not defined
 */}}
-{{- define "ffc-helm-library.requiredMsg.tpl" -}}
-{{- $name := (index . 1) -}}
+{{- define "ffc-helm-library.checkRequired.tpl" -}}
+{{- $key := (index . 1) -}}
 {{- $value := (index . 2) -}}
-{{- required (printf "No value found for '%s' in ffc-helm-library template" $name) $value -}}
+{{- required (printf "No value found for '%s' in ffc-helm-library template" $key) $value -}}
 {{- end -}}
 

@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ quote .Values.name }}
-  namespace: {{ quote .Values.namespace }}
+  name: {{ include "ffc-helm-library.checkRequired.tpl" (list . "name" .Values.name) | quote }}
+  namespace: {{ include "ffc-helm-library.checkRequired.tpl" (list . "namespace" .Values.namespace) | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
@@ -11,7 +11,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: {{ template "ffc-helm-library.requiredMsg.tpl" (list . "targetPort" .Values.container.port) }}
+    targetPort: {{ include "ffc-helm-library.checkRequired.tpl" (list . "targetPort" .Values.container.port) }}
   selector:
     {{- include "ffc-helm-library.selectorLabels" . | nindent 4 }}
 {{- end -}}
