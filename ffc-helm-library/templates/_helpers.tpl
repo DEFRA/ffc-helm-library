@@ -20,3 +20,13 @@ Selector labels
 app.kubernetes.io/name: {{ quote .Values.name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
+
+{{/*
+Required value message
+*/}}
+{{- define "ffc-helm-library.requiredMsg.tpl" -}}
+{{- $name := (index . 1) -}}
+{{- $value := (index . 2) -}}
+{{- required (printf "No value found for '%s' in ffc-helm-library template" $name) $value -}}
+{{- end -}}
+

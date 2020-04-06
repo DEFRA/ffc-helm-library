@@ -11,7 +11,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: {{ required "No value found for 'targetPort' in ffc-help-library template" .Values.container.port }}
+    targetPort: {{ template "ffc-helm-library.requiredMsg.tpl" (list . "targetPort" .Values.container.port) }}
   selector:
     {{- include "ffc-helm-library.selectorLabels" . | nindent 4 }}
 {{- end -}}
