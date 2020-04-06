@@ -30,3 +30,30 @@ Apply required check for a value and output message if value is not defined
 {{- required (printf "No value found for '%s' in ffc-helm-library template" $key) $value -}}
 {{- end -}}
 
+{{/*
+Settings for an http Get probe to be used for readiness or liveness
+*/}}
+{{- define "ffc-helm-library.httpGetProbe" -}}
+{{- $settings := (index . 1) -}}
+httpGet:
+  path: {{ $settings.path | quote }}
+  port: {{ $settings.port }}
+initialDelaySeconds: {{ $settings.initialDelaySeconds }}
+periodSeconds: {{ $settings.periodSeconds }}
+failureThreshold: {{ $settings.failureThreshold }}
+{{- end -}}
+
+{{/*
+Settings for a Node exec probe to be used for readiness or liveness
+*/}}
+{{- define "ffc-helm-library.execProbe" -}}
+{{- $settings := (index . 1) -}}
+exec:
+  command:
+  - sh
+  - -c
+  - {{ $settings.script }}
+initialDelaySeconds: {{ $settings.initialDelaySeconds }}
+periodSeconds: {{ $settings.periodSeconds }}
+failureThreshold: {{ $settings.failureThreshold }}
+{{- end -}}
