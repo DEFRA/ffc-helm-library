@@ -11,7 +11,7 @@ spec:
   ports:
   - name: http
     port: 80
-    targetPort: {{ include "ffc-helm-library.checkRequired.tpl" (list . "targetPort" .Values.container.port) }}
+    targetPort: {{ include "ffc-helm-library.checkRequired.tpl" (list . "container.port" .Values.container.port) }}
   selector:
     {{- include "ffc-helm-library.selectorLabels" . | nindent 4 }}
 {{- end -}}
