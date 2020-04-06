@@ -36,11 +36,11 @@ Settings for an http Get probe to be used for readiness or liveness
 {{- define "ffc-helm-library.httpGetProbe" -}}
 {{- $settings := (index . 1) -}}
 httpGet:
-  path: {{ $settings.path | quote }}
-  port: {{ $settings.port }}
-initialDelaySeconds: {{ $settings.initialDelaySeconds }}
-periodSeconds: {{ $settings.periodSeconds }}
-failureThreshold: {{ $settings.failureThreshold }}
+  path: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.path" $settings.path) | quote }}
+  port: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.port" $settings.port) }}
+initialDelaySeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.initialDelaySeconds" $settings.initialDelaySeconds) }}
+periodSeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.periodSeconds" $settings.periodSeconds) }}
+failureThreshold: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.failureThreshold" $settings.failureThreshold) }}
 {{- end -}}
 
 {{/*
@@ -50,10 +50,10 @@ Settings for a Node exec probe to be used for readiness or liveness
 {{- $settings := (index . 1) -}}
 exec:
   command:
-  - sh
-  - -c
-  - {{ $settings.script }}
-initialDelaySeconds: {{ $settings.initialDelaySeconds }}
-periodSeconds: {{ $settings.periodSeconds }}
-failureThreshold: {{ $settings.failureThreshold }}
+  - "sh"
+  - "-c"
+  - {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.script" $settings.script) | quote }}
+initialDelaySeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.initialDelaySeconds" $settings.initialDelaySeconds) }}
+periodSeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.periodSeconds" $settings.periodSeconds) }}
+failureThreshold: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.failureThreshold" $settings.failureThreshold) }}
 {{- end -}}
