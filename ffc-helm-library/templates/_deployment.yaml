@@ -1,4 +1,5 @@
 {{- define "ffc-helm-library.deployment.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -27,6 +28,10 @@ spec:
       imagePullSecrets:
       - name: {{ quote .Values.deployment.imagePullSecret }}
       {{- end }}
+      securityContext:
+        fsGroup: {{ required (printf $requiredMsg "deployment.runAsUser") .Values.deployment.runAsUser }}
+        runAsUser: {{ required (printf $requiredMsg "deployment.runAsUser") .Values.deployment.runAsUser }}
+        runAsNonRoot: {{ required (printf $requiredMsg "deployment.runAsNonRoot") .Values.deployment.runAsNonRoot }}
       containers:
       -
 {{ include "ffc-helm-library.container.tpl" . | indent 8 }}

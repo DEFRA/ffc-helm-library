@@ -14,8 +14,6 @@ args:
 {{- end }}
 imagePullPolicy: {{ required (printf $requiredMsg "container.imagePullPolicy") .Values.container.imagePullPolicy | quote }}
 securityContext:
-  runAsUser: {{ required (printf $requiredMsg "container.runAsUser") .Values.container.runAsUser }}
-  runAsNonRoot: {{ required (printf $requiredMsg "container.runAsNonRoot") .Values.container.runAsNonRoot }}
   readOnlyRootFilesystem: {{ required (printf $requiredMsg "container.readOnlyRootFilesystem") .Values.container.readOnlyRootFilesystem }}
   allowPrivilegeEscalation: {{ required (printf $requiredMsg "container.allowPrivilegeEscalation") .Values.container.allowPrivilegeEscalation }}
 resources:
