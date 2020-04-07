@@ -12,7 +12,7 @@ spec:
   strategy: {}
   selector:
     matchLabels:
-      {{- include "ffc-helm-library.selectorLabels" . | nindent 6 }}
+      {{- include "ffc-helm-library.selector-labels" . | nindent 6 }}
   template:
     metadata:
       namespace: {{ quote .Values.namespace }}
@@ -28,7 +28,7 @@ spec:
       - name: {{ quote .Values.deployment.imagePullSecret }}
       {{- end }}
       containers:
-      - 
+      -
 {{ include "ffc-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
 {{- define "ffc-helm-library.deployment" -}}

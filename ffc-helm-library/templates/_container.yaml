@@ -1,5 +1,5 @@
 {{- define "ffc-helm-library.container.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 image: {{ required (printf $requiredMsg "image") .Values.image | quote }}
 {{- if .Values.container.command }}
@@ -12,19 +12,19 @@ args:
   {{- toYaml . | nindent 12 }}
 {{- end }}
 {{- end }}
-imagePullPolicy: {{ required (printf $requiredMsg "imagePullPolicy") .Values.container.imagePullPolicy | quote }}
+imagePullPolicy: {{ required (printf $requiredMsg "container.imagePullPolicy") .Values.container.imagePullPolicy | quote }}
 securityContext:
-  runAsUser: {{ required (printf $requiredMsg "runAsUser") .Values.container.runAsUser }}
-  runAsNonRoot: {{ required (printf $requiredMsg "runAsNonRoot") .Values.container.runAsNonRoot }}
-  readOnlyRootFilesystem: {{ required (printf $requiredMsg "readOnlyRootFilesystem") .Values.container.readOnlyRootFilesystem }}
-  allowPrivilegeEscalation: {{ required (printf $requiredMsg "allowPrivilegeEscalation") .Values.container.allowPrivilegeEscalation }}     
+  runAsUser: {{ required (printf $requiredMsg "container.runAsUser") .Values.container.runAsUser }}
+  runAsNonRoot: {{ required (printf $requiredMsg "container.runAsNonRoot") .Values.container.runAsNonRoot }}
+  readOnlyRootFilesystem: {{ required (printf $requiredMsg "container.readOnlyRootFilesystem") .Values.container.readOnlyRootFilesystem }}
+  allowPrivilegeEscalation: {{ required (printf $requiredMsg "container.allowPrivilegeEscalation") .Values.container.allowPrivilegeEscalation }}
 resources:
   requests:
-    memory: {{ required (printf $requiredMsg "requestMemory") .Values.container.requestMemory | quote }}
-    cpu: {{ required (printf $requiredMsg "requestCpu") .Values.container.requestCpu | quote }}
+    memory: {{ required (printf $requiredMsg "container.requestMemory") .Values.container.requestMemory | quote }}
+    cpu: {{ required (printf $requiredMsg "container.requestCpu") .Values.container.requestCpu | quote }}
   limits:
-    memory: {{ required (printf $requiredMsg "limitMemory") .Values.container.limitMemory | quote }}
-    cpu: {{ required (printf $requiredMsg "limitCpu") .Values.container.limitCpu | quote }}
+    memory: {{ required (printf $requiredMsg "container.limitMemory") .Values.container.limitMemory | quote }}
+    cpu: {{ required (printf $requiredMsg "container.limitCpu") .Values.container.limitCpu | quote }}
 {{- end -}}
 {{- define "ffc-helm-library.container" -}}
 {{- println "" -}}

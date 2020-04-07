@@ -1,7 +1,7 @@
 {{/*
 A default message string to be used when checking for a required value
 */}}
-{{- define "ffc-helm-library.defaultCheckRequiredMsg.tpl" -}}
+{{- define "ffc-helm-library.default-check-required-msg" -}}
 {{- "No value found for '%s' in ffc-helm-library template" -}}
 {{- end -}}
 
@@ -23,7 +23,7 @@ environment: {{ quote .Values.environment }}
 {{/*
 Selector labels
 */}}
-{{- define "ffc-helm-library.selectorLabels" -}}
+{{- define "ffc-helm-library.selector-labels" -}}
 app.kubernetes.io/name: {{ quote .Values.name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
@@ -31,9 +31,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Settings for an http GET probe to be used for readiness or liveness
 */}}
-{{- define "ffc-helm-library.httpGetProbe" -}}
+{{- define "ffc-helm-library.http-get-probe" -}}
 {{- $settings := (index . 1) -}}
-{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 httpGet:
   path: {{ required (printf $requiredMsg "probe.path") $settings.path | quote }}
   port: {{ required (printf $requiredMsg "probe.port") $settings.port }}
@@ -45,9 +45,9 @@ failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $se
 {{/*
 Settings for a Node exec probe to be used for readiness or liveness
 */}}
-{{- define "ffc-helm-library.execProbe" -}}
+{{- define "ffc-helm-library.exec-probe" -}}
 {{- $settings := (index . 1) -}}
-{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 exec:
   command:
   - "sh"
