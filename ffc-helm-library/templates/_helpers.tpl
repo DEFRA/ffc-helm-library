@@ -1,4 +1,11 @@
 {{/*
+A default message string to be used when checking for a required value
+*/}}
+{{- define "ffc-helm-library.defaultCheckRequiredMsg.tpl" -}}
+{{- "No value found for '%s' in ffc-helm-library template" -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "ffc-helm-library.labels" -}}
@@ -22,25 +29,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-Apply required check for a value and output message if value is not defined
-*/}}
-{{- define "ffc-helm-library.checkRequired.tpl" -}}
-{{- $key := (index . 1) -}}
-{{- $value := (index . 2) -}}
-{{- required (printf "No value found for '%s' in ffc-helm-library template" $key) $value -}}
-{{- end -}}
-
-{{/*
-Settings for an http Get probe to be used for readiness or liveness
+Settings for an http GET probe to be used for readiness or liveness
 */}}
 {{- define "ffc-helm-library.httpGetProbe" -}}
 {{- $settings := (index . 1) -}}
+{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
 httpGet:
-  path: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.path" $settings.path) | quote }}
-  port: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.port" $settings.port) }}
-initialDelaySeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.initialDelaySeconds" $settings.initialDelaySeconds) }}
-periodSeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.periodSeconds" $settings.periodSeconds) }}
-failureThreshold: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.failureThreshold" $settings.failureThreshold) }}
+  path: {{ required (printf $requiredMsg "probe.path") $settings.path | quote }}
+  port: {{ required (printf $requiredMsg . "probe.port") $settings.port }}
+initialDelaySeconds: {{ required (printf $requiredMsg  "probe.initialDelaySeconds") $settings.initialDelaySeconds }}
+periodSeconds: {{ required (printf $requiredMsg "probe.periodSeconds") $settings.periodSeconds }}
+failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $settings.failureThreshold }}
 {{- end -}}
 
 {{/*
@@ -48,12 +47,13 @@ Settings for a Node exec probe to be used for readiness or liveness
 */}}
 {{- define "ffc-helm-library.execProbe" -}}
 {{- $settings := (index . 1) -}}
+{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
 exec:
   command:
   - "sh"
   - "-c"
-  - {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.script" $settings.script) | quote }}
-initialDelaySeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.initialDelaySeconds" $settings.initialDelaySeconds) }}
-periodSeconds: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.periodSeconds" $settings.periodSeconds) }}
-failureThreshold: {{ include "ffc-helm-library.checkRequired.tpl" (list . "probe.failureThreshold" $settings.failureThreshold) }}
+  - {{ required (printf $requiredMsg "probe.script") $settings.script | quote }}
+initialDelaySeconds: {{ required (printf $requiredMsg "probe.initialDelaySeconds") $settings.initialDelaySeconds }}
+periodSeconds: {{ required (printf $requiredMsg "probe.periodSeconds") $settings.periodSeconds }}
+failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $settings.failureThreshold }}
 {{- end -}}
