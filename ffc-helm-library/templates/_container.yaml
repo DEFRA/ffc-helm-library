@@ -12,7 +12,7 @@ args:
   {{- toYaml . | nindent 12 }}
 {{- end }}
 {{- end }}
-imagePullPolicy: {{ quote .Values.container.imagePullPolicy }}
+imagePullPolicy: {{ required (printf $requiredMsg "imagePullPolicy") .Values.container.imagePullPolicy | quote }}
 securityContext:
   runAsUser: {{ required (printf $requiredMsg "runAsUser") .Values.container.runAsUser }}
   runAsNonRoot: {{ required (printf $requiredMsg "runAsNonRoot") .Values.container.runAsNonRoot }}
