@@ -36,7 +36,7 @@ Settings for an http GET probe to be used for readiness or liveness
 {{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
 httpGet:
   path: {{ required (printf $requiredMsg "probe.path") $settings.path | quote }}
-  port: {{ required (printf $requiredMsg . "probe.port") $settings.port }}
+  port: {{ required (printf $requiredMsg "probe.port") $settings.port }}
 initialDelaySeconds: {{ required (printf $requiredMsg  "probe.initialDelaySeconds") $settings.initialDelaySeconds }}
 periodSeconds: {{ required (printf $requiredMsg "probe.periodSeconds") $settings.periodSeconds }}
 failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $settings.failureThreshold }}

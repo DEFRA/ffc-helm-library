@@ -7,11 +7,15 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{ quote .Values.ingress.class }}    
+    kubernetes.io/ingress.class: {{ quote .Values.ingress.class }}
 spec:
   rules:
 {{- if .Values.ingress.endpoint }}
+  {{- if .Values.pr }}
+  - host: {{ .Values.ingress.endpoint }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  {{ else }}
   - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
+  {{- end }}
     http:
 {{ else }}
   - http:

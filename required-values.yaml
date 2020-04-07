@@ -8,6 +8,9 @@ namespace: ffc-demo
 image: ffc-demo-web
 workstream: ffc-demo
 
+# Required, leave blank, filled in by Jenkins pipeline
+pr:
+
 # Required for all resources
 labels:
   instance:
@@ -16,7 +19,7 @@ labels:
 # Required for all ingress resources
 ingress:
   class: nginx
-  endPoint: ffc-demo
+  endpoint: ffc-demo
   server:
 
 # Required for charts defining a single secret
