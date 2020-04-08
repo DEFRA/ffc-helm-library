@@ -1,8 +1,9 @@
 {{- define "ffc-helm-library.role-binding.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.name }}-developer-1-admin-rolebinding
+  name: {{ required (printf $requiredMsg "name") .Values.name }}-developer-1-admin-rolebinding
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
@@ -13,7 +14,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: {{ .Values.workstream }}-developer-1
+  name: {{ required (printf $requiredMsg "workstream") .Values.workstream }} -developer-1
 {{- end -}}
 {{- define "ffc-helm-library.role-binding" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.role-binding.tpl") -}}
