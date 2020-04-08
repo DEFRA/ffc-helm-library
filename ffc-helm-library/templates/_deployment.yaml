@@ -1,14 +1,15 @@
 {{- define "ffc-helm-library.deployment.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ quote .Values.name }}
-  namespace: {{ quote .Values.namespace }}
+  name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.deployment.replicas }}
-  minReadySeconds: {{ .Values.deployment.minReadySeconds }}
+  replicas: {{ required (printf $requiredMsg "replicas") .Values.deployment.replicas | quote }}
+  minReadySeconds: {{ required (printf $requiredMsg "minReadySeconds ") .Values.deployment.minReadySeconds }}
   strategy: {}
   selector:
     matchLabels:
