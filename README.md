@@ -66,7 +66,8 @@ environment: <string>
 
 ### Cluster IP service template
 
-Template file: `_cluster-ip-service.yaml`
+* Template file: `_cluster-ip-service.yaml`
+* Template name: `ffc-helm-library.cluster-ip-service`
 
 A k8s `Service` object of type `ClusterIP`.
 
@@ -89,7 +90,8 @@ container:
 
 ### Container template
 
-Template file: `_container.yaml`
+* Template file: `_container.yaml`
+* Template name: `ffc-helm-library.container`
 
 A template for the container definition to be used within a k8s `Deployment` object.
 
@@ -101,7 +103,6 @@ env: <list>
 livenessProbe:
 readinessProbe:
 {{- end -}}
-
 ```
 
 The liveness and readiness probes could take advantage of the helper templates for [http GET probe](#http-get-probe) and [exec probe](#exec-probe) defined within the library chart and described below.
@@ -134,14 +135,23 @@ container:
 
 ### Deployment template
 
-Template file: `_deployment.yaml`
+* Template file: `_deployment.yaml`
+* Template name: `ffc-helm-library.deployment`
 
-(TODO: add description)
+A k8s `Deployment` object.
 
-A basic usage of this object template would involve the creation of `templates/deployment.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+A basic usage of this object template would involve the creation of `templates/deployment.yaml` in the parent Helm chart (e.g. `ffc-microservice`) that includes the template defined in `_container.yaml` template:
 
 ```
-TODO
+{{- include "ffc-helm-library.deployment" (list . "ffc-microservice.deployment") -}}
+{{- define "ffc-microservice.deployment" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "ffc-helm-library.container" (list . "ffc-microservice.container") }}
+{{- end -}}
+
 ```
 
 #### Required values
@@ -159,10 +169,9 @@ deployment:
   runAsNonRoot: <boolean>
 ```
 
-
 #### Optional values
 
-The following values can optionally be set in the parent chart's `values.yaml` to enable the respective configuration:
+The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the k8s object:
 
 ```
 deployment:
@@ -171,7 +180,8 @@ deployment:
 
 ### EKS service account template
 
-Template file: `_eks-service-account.yaml`
+* Template file: `_eks-service-account.yaml`
+* Template name: `ffc-helm-library.eks-service-account`
 
 A k8s `ServiceAccount` object configured for use on AWS's managed k8s service EKS.
 
@@ -195,16 +205,30 @@ serviceAccount:
 
 ### Ingress template
 
-Template file: `_ingress.yaml`
+* Template file: `_ingress.yaml`
+* Template name: `ffc-helm-library.ingress`
 
-(TODO: add description)
+A k8s `Ingress` object that can be configured for Nginx or AWS ALB (Amazon Load Balancer).
 
-A basic usage of this object template would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
-
-(TODO: nginx vs alb)
+A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-TODO
+{{- include "ffc-helm-library.ingress" (list . "ffc-demo-web.ingress") -}}
+{{- define "ffc-demo-web.ingress" -}}
+metadata:
+  annotations:
+    <nginx-ingress-annotations>
+{{- end -}}
+```
+A basic ALB `Ingress` object would involve the creation of `templates/ingress-alb.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.ingress" (list . "ffc-demo-web.ingress-alb") -}}
+{{- define "ffc-demo-web.ingress-alb" -}}
+metadata:
+  annotations:
+    <alb-ingress-annotation>
+{{- end -}}
 ```
 
 #### Required values
@@ -232,7 +256,8 @@ ingress:
 
 ### Postgres service template
 
-Template file: `_postgres-service.yaml`
+* Template file: `_postgres-service.yaml`
+* Template name: `ffc-helm-library.postgres-service`
 
 (TODO: add description - this is an external service type)
 
@@ -329,25 +354,25 @@ In addition to the k8s object templates described above, a number of helper temp
 
 ### Default check required message
 
-Template name: `ffc-helm-library.default-check-required-msg`
+* Template name: `ffc-helm-library.default-check-required-msg`
 
 (TODO: add description and usage)
 
 ### Labels
 
-Template name: `ffc-helm-library.labels`
+* Template name: `ffc-helm-library.labels`
 
 (TODO: add description and usage)
 
 ### Selector labels
 
-Template name: `ffc-helm-library.selector-labels`
+* Template name: `ffc-helm-library.selector-labels`
 
 (TODO: add description and usage)
 
 ### Http GET probe
 
-Template name: `ffc-helm-library.http-get-probe`
+* Template name: `ffc-helm-library.http-get-probe`
 
 (TODO: add description and usage)
 
@@ -355,7 +380,7 @@ Settings for an http GET probe to be used for readiness or liveness
 
 ### Exec probe
 
-Template name: `ffc-helm-library.exec-probe`
+* Template name: `ffc-helm-library.exec-probe`
 
 (TODO: add description and usage)
 
