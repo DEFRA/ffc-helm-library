@@ -7,9 +7,13 @@ A Helm library chart that captures general configuration for the FFC Kubernetes 
 In your microservice Helm chart:
   * Update `Chart.yaml` to `apiVersion: v2`.
   * Add the library chart under `dependencies` and choose the version you want (example below). Version number can include `~` or `^` to pick up latest PATCH and MINOR versions respectively.
-  * Add the repo that contains the library chart: `helm repo add ffc https://raw.githubusercontent.com/defra/ffc-helm-repository/master/`
-  * Update repo: `helm repo update`
-  * Update dependencies in your Helm chart: `helm dependency update <helm_chart_location>`
+  * Issue the following commands to add the repo that contains the library chart, update the repo, then update dependencies in your Helm chart:
+
+```
+helm repo add ffc https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
+helm repo update
+helm dependency update <helm_chart_location>
+```
 
 An example FFC microservice `Chart.yaml`:
 
@@ -60,35 +64,11 @@ namespace: <string>
 environment: <string>
 ```
 
-### AWS service account template
-
-Template file: `_aws-service-account.yaml`
-
-(TODO: add description)
-
-A basic usage of this object template would involve the creation of `templates/aws-service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
-
-```
-{{- include "ffc-helm-library.aws-service-account" (list . "ffc-microservice.aws-service-account") -}}
-{{- define "ffc-microservice.aws-service-account" -}}
-{{- end -}}
-```
-
-#### Required values
-
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-serviceAccount:
-  name: <string>
-  roleArn: <string>
-```
-
 ### Cluster IP service template
 
 Template file: `_cluster-ip-service.yaml`
 
-(TODO: add description)
+A k8s `Service` object of type `ClusterIP`.
 
 A basic usage of this object template would involve the creation of `templates/cluster-ip-service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
@@ -100,7 +80,7 @@ A basic usage of this object template would involve the creation of `templates/c
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 container:
@@ -111,17 +91,24 @@ container:
 
 Template file: `_container.yaml`
 
-(TODO: add description)
+A template for the container definition to be used within a k8s `Deployment` object.
 
-A basic usage of this object template would involve the creation of `templates/_container.yaml` in the parent Helm chart (e.g. `ffc-microservice`). Note the `_` in the name. This template is part of the `deployment` object definition and will be used within the `deployment.yaml` ([see below](#deployment-template)). As a minimum, `templates/_container.yaml` would contain:
+A basic usage of this object template would involve the creation of `templates/_container.yaml` in the parent Helm chart (e.g. `ffc-microservice`). Note the `_` in the name. This template is part of the `Deployment` object definition and will be used in conjunction the `_deployment.yaml` template ([see below](#deployment-template)). As a minimum, `templates/_container.yaml` would define environment variables and liveness/readiness probes, e.g.:
 
 ```
-TODO
+{{- define "ffc-microservice.container" -}}
+env: <list>
+livenessProbe:
+readinessProbe:
+{{- end -}}
+
 ```
+
+The liveness and readiness probes could take advantage of the helper templates for [http GET probe](#http-get-probe) and [exec probe](#exec-probe) defined within the library chart and described below.
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 image: <string>
@@ -135,16 +122,15 @@ container:
   limitCpu: <string>
 ```
 
-
 #### Optional values
+
+The following values can optionally be set in the parent chart's `values.yaml` to enable a command with arguments to run within the container:
 
 ```
 container:
-  command: <array of strings>
-  args: <array of strings>
+  command: <list of strings>
+  args: <list of strings>
 ```
-
-
 
 ### Deployment template
 
@@ -160,7 +146,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 deployment:
@@ -176,9 +162,35 @@ deployment:
 
 #### Optional values
 
+The following values can optionally be set in the parent chart's `values.yaml` to enable the respective configuration:
+
 ```
 deployment:
   imagePullSecret: <string>
+```
+
+### EKS service account template
+
+Template file: `_eks-service-account.yaml`
+
+A k8s `ServiceAccount` object configured for use on AWS's managed k8s service EKS.
+
+A basic usage of this object template would involve the creation of `templates/eks-service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.eks-service-account" (list . "ffc-microservice.eks-service-account") -}}
+{{- define "ffc-microservice.eks-service-account" -}}
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+serviceAccount:
+  name: <string>
+  roleArn: <string>
 ```
 
 ### Ingress template
@@ -197,7 +209,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 ingress:
@@ -207,6 +219,8 @@ container:
 ```
 
 #### Optional values
+
+The following values can optionally be set in the parent chart's `values.yaml` to set the value of `host`:
 
 ```
 pr: <string>
@@ -230,7 +244,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 postgresService:
@@ -254,7 +268,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 workstream: <string>
@@ -277,7 +291,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 secret:
@@ -302,7 +316,7 @@ TODO
 
 #### Required values
 
-Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
 service:
