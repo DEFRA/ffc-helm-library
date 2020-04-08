@@ -65,9 +65,9 @@ A basic usage of this object template would involve the creation of `templates/a
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-serviceAccount: <value>
-  name: <value>
-  roleArn: <value>
+serviceAccount:
+  name: <string>
+  roleArn: <string>
 ```
 
 ### Cluster IP service template
@@ -89,7 +89,8 @@ A basic usage of this object template would involve the creation of `templates/c
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+container:
+  port: <integer>
 ```
 
 ### Container template
@@ -109,24 +110,24 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+container:
+  imagePullPolicy: <string>
+  readOnlyRootFilesystem: <boolean>
+  allowPrivilegeEscalation: <boolean>
+  requestMemory: <string>
+  requestCpu: <string>
+  limitMemory: <string>
+  limitCpu: <string>
 ```
 
-name
-image
-container.imagePullPolicy
-container.readOnlyRootFilesystem
-container.allowPrivilegeEscalation
-container.requestMemory
-container.requestCpu
-container.limitMemory
-container.limitCpu
 
 #### Optional values
 
-container.command
-container.args
-
+```
+container:
+  command: <array of strings>
+  args: <array of strings>
+```
 
 
 
@@ -147,22 +148,23 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+deployment:
+  replicas: <integer>
+  minReadySeconds: <integer>
+  redeployOnChange: <string>
+  priorityClassName: <string>
+  restartPolicy: <string>
+  runAsUser: <integer>
+  runAsNonRoot: <boolean>
 ```
 
-name
-namespace
-deployment.replicas
-deployment.minReadySeconds
-deployment.redeployOnChange
-deployment.priorityClassName
-deployment.restartPolicy
-deployment.runAsUser
-deployment.runAsNonRoot
 
 #### Optional values
 
-deployment.imagePullSecret
+```
+deployment:
+  imagePullSecret: <string>
+```
 
 ### Ingress template
 
@@ -183,16 +185,20 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-ingress.class
-container.port
+ingress:
+  class: <string>
+container:
+  port: <integer>
 ```
 
 #### Optional values
 
 ```
-pr
-ingress.endpoint
-ingress.server
+pr: <string>
+ingress:
+  endpoint: <string>
+ingress:
+  server: <string>
 ```
 
 ### Postgres service template
@@ -212,7 +218,10 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+postgresService:
+  postgresHost: <string>
+  postgresExternalName: <string>
+  postgresPort: <integer>
 ```
 
 ### RBAC role binding template
@@ -233,7 +242,7 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+workstream: <string>
 ```
 
 ### Secret template
@@ -256,7 +265,9 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+secret:
+  name: <string>
+  type: <string>
 ```
 
 ### Service template
@@ -279,7 +290,8 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+service:
+  type: <string>
 ```
 
 ## Helper templates
