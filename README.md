@@ -42,6 +42,7 @@ dependencies:
 All the object templates include labels (TODO: list them and any other globals)
 
 ```
+name: <value>
 namespace: <value>
 ```
 
@@ -111,6 +112,24 @@ Including this template requires the following values to be set in the parent ch
 TODO
 ```
 
+name
+image
+container.imagePullPolicy
+container.readOnlyRootFilesystem
+container.allowPrivilegeEscalation
+container.requestMemory
+container.requestCpu
+container.limitMemory
+container.limitCpu
+
+#### Optional values
+
+container.command
+container.args
+
+
+
+
 ### Deployment template
 
 Template file: `_deployment.yaml`
@@ -131,6 +150,20 @@ Including this template requires the following values to be set in the parent ch
 TODO
 ```
 
+name
+namespace
+deployment.replicas
+deployment.minReadySeconds
+deployment.redeployOnChange
+deployment.priorityClassName
+deployment.restartPolicy
+deployment.runAsUser
+deployment.runAsNonRoot
+
+#### Optional values
+
+deployment.imagePullSecret
+
 ### Ingress template
 
 Template file: `_ingress.yaml`
@@ -150,7 +183,16 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-TODO
+ingress.class
+container.port
+```
+
+#### Optional values
+
+```
+pr
+ingress.endpoint
+ingress.server
 ```
 
 ### Postgres service template
