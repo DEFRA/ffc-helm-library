@@ -8,25 +8,25 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  replicas: {{ required (printf $requiredMsg "replicas") .Values.deployment.replicas | quote }}
-  minReadySeconds: {{ required (printf $requiredMsg "minReadySeconds ") .Values.deployment.minReadySeconds }}
+  replicas: {{ required (printf $requiredMsg "deployment.replicas") .Values.deployment.replicas | quote }}
+  minReadySeconds: {{ required (printf $requiredMsg "deployment.minReadySeconds") .Values.deployment.minReadySeconds }}
   strategy: {}
   selector:
     matchLabels:
       {{- include "ffc-helm-library.selector-labels" . | nindent 6 }}
   template:
     metadata:
-      namespace: {{ quote .Values.namespace }}
+      namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
       labels:
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
       annotations:
-        redeployOnChange: {{ quote .Values.deployment.redeployOnChange }}
+        redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
     spec:
-      priorityClassName: {{ quote .Values.deployment.priorityClassName }}
-      restartPolicy: {{ quote .Values.deployment.restartPolicy }}
+      priorityClassName: {{ required (printf $requiredMsg "deployment.priorityClassName") .Values.deployment.priorityClassName | quote }}
+      restartPolicy: {{ required (printf $requiredMsg "deployment.restartPolicy") .Values.deployment.restartPolicy | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
-      - name: {{ quote .Values.deployment.imagePullSecret }}
+      - name: {{ required (printf $requiredMsg "deployment.imagePullSecret") .Values.deployment.imagePullSecret| quote }}
       {{- end }}
       securityContext:
         fsGroup: {{ required (printf $requiredMsg "deployment.runAsUser") .Values.deployment.runAsUser }}
