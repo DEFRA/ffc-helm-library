@@ -39,6 +39,8 @@ postgresService:
 
 # Required for all deployment resources with pods
 deployment:
+  runAsNonRoot: true
+  runAsUser: 1000
   restartPolicy: Always
   priorityClassName: low
   replicas: 1
@@ -53,7 +55,5 @@ container:
   requestCpu: 60m
   limitMemory: 80Mi
   limitCpu: 80m
-  runAsNonRoot: true
-  runAsUser: 1000
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false

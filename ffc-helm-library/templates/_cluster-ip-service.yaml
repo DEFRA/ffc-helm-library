@@ -1,5 +1,5 @@
 {{- define "ffc-helm-library.cluster-ip-service.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.defaultCheckRequiredMsg.tpl" . -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -14,7 +14,7 @@ spec:
     port: 80
     targetPort: {{ required (printf $requiredMsg "container.port") .Values.container.port }}
   selector:
-    {{- include "ffc-helm-library.selectorLabels" . | nindent 4 }}
+    {{- include "ffc-helm-library.selector-labels" . | nindent 4 }}
 {{- end -}}
 {{- define "ffc-helm-library.cluster-ip-service" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.cluster-ip-service.tpl") -}}
