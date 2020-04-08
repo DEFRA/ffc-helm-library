@@ -1,19 +1,21 @@
 # FFC Platform Helm Library Chart
 
-A Helm library chart that captures general configuration for the FFC Kubernetes platform (MORE HERE)
+A Helm library chart that captures general configuration for the FFC Kubernetes platform. It can be used by any FFC microservice Helm chart to import k8s object templates configured to run on the FFC platform.
 
 ## Including the library chart
 
-Steps:
-  * Update `Chart.yaml` to `apiVersion: v2`
-  * Add library chart under `dependencies`. Choose the version you want. Version number can include `~` or `^` to pick up latest PATCH and MINOR versions respectively
-  * Need to do `helm dependency update` (check if need to do add helm repo -- see Helm chart documentation)
+In your microservice Helm chart:
+  * Update `Chart.yaml` to `apiVersion: v2`.
+  * Add the library chart under `dependencies` and choose the version you want (example below). Version number can include `~` or `^` to pick up latest PATCH and MINOR versions respectively.
+  * Add the repo that contains the library chart: `helm repo add ffc https://raw.githubusercontent.com/defra/ffc-helm-repository/master/`
+  * Update repo: `helm repo update`
+  * Update dependencies in your Helm chart: `helm dependency update <helm_chart_location>`
 
-An example `Chart.yaml`:
+An example FFC microservice `Chart.yaml`:
 
 ```
 apiVersion: v2
-description: A Helm chart to deploy a microservices to FFC Kubernetes platform
+description: A Helm chart to deploy a microservice to the FFC Kubernetes platform
 name: ffc-microservice
 version: 1.0.0
 dependencies:
@@ -24,11 +26,11 @@ dependencies:
 
 ## Using the k8s object templates
 
-(Follow instructions for using the library chart)
+First, follow [the instructions](#including-the-library-chart) for including the FFC Helm library chart.
 
-(Intro text here, generally how you use the templates. Basically include the library template and pass it the template defined in the parent helm chart)
+The FFC Helm library chart has been configured using the conventions described in the [Helm library chart documentation](https://helm.sh/docs/topics/library_charts/). The k8s object templates provide settings shared by all objects of that type, which can be augmented with extra settings from the parent (FFC microservice) chart. The library object templates will merge the library and parent templates. In the case where settings are defined in both the library and parent chart, the parent chart settings will take precedence, so library chart settings can be overridden. The library object templates will expect values to be set in the parent `.values.yaml`. Any required values (defined for each template below) that are not provided will result in an error message when processing the template (`helm install`, `helm upgrade`, `helm template`).
 
-(TODO: include an example of an IF statement)
+The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the k8s object formateted as so:
 
 ```
 {{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
@@ -37,13 +39,25 @@ dependencies:
 {{- end -}}
 ```
 
-### All template required values
-
-All the object templates include labels (TODO: list them and any other globals)
+This example would be for `template/secret.yaml` in the `ffc-microservice` Helm chart. The initial `include` statement can be wrapped in an `if` statement if you only wish to create the k8s object based on a condition. E.g., only create the secret is a `pr` value has been set in `values.yaml`:
 
 ```
-name: <value>
-namespace: <value>
+{{- if .Values.pr }}
+{{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
+{{- end }}
+{{- define "ffc-microservice.secret" -}}
+{{- end -}}
+```
+
+
+### All template required values
+
+All the k8s object templates in the library require the following values to be set in the parent microservice Helm chart's `values.yaml`:
+
+```
+name: <string>
+namespace: <string>
+environment: <string>
 ```
 
 ### AWS service account template
@@ -110,6 +124,7 @@ TODO
 Including this template requires the following values to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
+image: <string>
 container:
   imagePullPolicy: <string>
   readOnlyRootFilesystem: <boolean>

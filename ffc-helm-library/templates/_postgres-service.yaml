@@ -1,4 +1,5 @@
 {{- define "ffc-helm-library.postgres-service.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: Service
 metadata:
