@@ -1,6 +1,6 @@
 # FFC Platform Helm Library Chart
 
-A Helm library chart that captures general configuration for the FFC Kubernetes platform. It can be used by any FFC microservice Helm chart to import k8s object templates configured to run on the FFC platform.
+A Helm library chart that captures general configuration for the FFC Kubernetes platform. It can be used by any FFC microservice Helm chart to import K8s object templates configured to run on the FFC platform.
 
 ## Including the library chart
 
@@ -28,13 +28,13 @@ dependencies:
   repository: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
 ```
 
-## Using the k8s object templates
+## Using the K8s object templates
 
 First, follow [the instructions](#including-the-library-chart) for including the FFC Helm library chart.
 
-The FFC Helm library chart has been configured using the conventions described in the [Helm library chart documentation](https://helm.sh/docs/topics/library_charts/). The k8s object templates provide settings shared by all objects of that type, which can be augmented with extra settings from the parent (FFC microservice) chart. The library object templates will merge the library and parent templates. In the case where settings are defined in both the library and parent chart, the parent chart settings will take precedence, so library chart settings can be overridden. The library object templates will expect values to be set in the parent `.values.yaml`. Any required values (defined for each template below) that are not provided will result in an error message when processing the template (`helm install`, `helm upgrade`, `helm template`).
+The FFC Helm library chart has been configured using the conventions described in the [Helm library chart documentation](https://helm.sh/docs/topics/library_charts/). The K8s object templates provide settings shared by all objects of that type, which can be augmented with extra settings from the parent (FFC microservice) chart. The library object templates will merge the library and parent templates. In the case where settings are defined in both the library and parent chart, the parent chart settings will take precedence, so library chart settings can be overridden. The library object templates will expect values to be set in the parent `.values.yaml`. Any required values (defined for each template below) that are not provided will result in an error message when processing the template (`helm install`, `helm upgrade`, `helm template`).
 
-The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the k8s object formateted as so:
+The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the K8s object formateted as so:
 
 ```
 {{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
@@ -43,20 +43,21 @@ The general strategy for using one of the library templates in the parent micros
 {{- end -}}
 ```
 
-This example would be for `template/secret.yaml` in the `ffc-microservice` Helm chart. The initial `include` statement can be wrapped in an `if` statement if you only wish to create the k8s object based on a condition. E.g., only create the secret is a `pr` value has been set in `values.yaml`:
+This example would be for `template/secret.yaml` in the `ffc-microservice` Helm chart. The initial `include` statement can be wrapped in an `if` statement if you only wish to create the K8s object based on a condition. E.g., only create the secret is a `pr` value has been set in `values.yaml`:
 
 ```
 {{- if .Values.pr }}
 {{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
 {{- end }}
 {{- define "ffc-microservice.secret" -}}
+# Microservice specific configuration in here
 {{- end -}}
 ```
 
 
 ### All template required values
 
-All the k8s object templates in the library require the following values to be set in the parent microservice Helm chart's `values.yaml`:
+All the K8s object templates in the library require the following values to be set in the parent microservice Helm chart's `values.yaml`:
 
 ```
 name: <string>
@@ -69,13 +70,14 @@ environment: <string>
 * Template file: `_cluster-ip-service.yaml`
 * Template name: `ffc-helm-library.cluster-ip-service`
 
-A k8s `Service` object of type `ClusterIP`.
+A K8s `Service` object of type `ClusterIP`.
 
 A basic usage of this object template would involve the creation of `templates/cluster-ip-service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.cluster-ip-service" (list . "ffc-microservice.cluster-ip-service") -}}
-{{- define "ffc-microservice.cluster-ip-service" -}}
+{{- include "ffc-helm-library.cluster-ip-service" (list . "ffc-microservice.service") -}}
+{{- define "ffc-microservice.service" -}}
+# Microservice specific configuration in here
 {{- end -}}
 ```
 
@@ -93,15 +95,15 @@ container:
 * Template file: `_container.yaml`
 * Template name: `ffc-helm-library.container`
 
-A template for the container definition to be used within a k8s `Deployment` object.
+A template for the container definition to be used within a K8s `Deployment` object.
 
 A basic usage of this object template would involve the creation of `templates/_container.yaml` in the parent Helm chart (e.g. `ffc-microservice`). Note the `_` in the name. This template is part of the `Deployment` object definition and will be used in conjunction the `_deployment.yaml` template ([see below](#deployment-template)). As a minimum, `templates/_container.yaml` would define environment variables and liveness/readiness probes, e.g.:
 
 ```
 {{- define "ffc-microservice.container" -}}
 env: <list>
-livenessProbe:
-readinessProbe:
+livenessProbe: <map>
+readinessProbe: <map>
 {{- end -}}
 ```
 
@@ -138,7 +140,7 @@ container:
 * Template file: `_deployment.yaml`
 * Template name: `ffc-helm-library.deployment`
 
-A k8s `Deployment` object.
+A K8s `Deployment` object.
 
 A basic usage of this object template would involve the creation of `templates/deployment.yaml` in the parent Helm chart (e.g. `ffc-microservice`) that includes the template defined in `_container.yaml` template:
 
@@ -171,7 +173,7 @@ deployment:
 
 #### Optional values
 
-The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the k8s object:
+The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the K8s object:
 
 ```
 deployment:
@@ -183,13 +185,14 @@ deployment:
 * Template file: `_eks-service-account.yaml`
 * Template name: `ffc-helm-library.eks-service-account`
 
-A k8s `ServiceAccount` object configured for use on AWS's managed k8s service EKS.
+A K8s `ServiceAccount` object configured for use on AWS's managed K8s service EKS.
 
 A basic usage of this object template would involve the creation of `templates/eks-service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
 {{- include "ffc-helm-library.eks-service-account" (list . "ffc-microservice.eks-service-account") -}}
 {{- define "ffc-microservice.eks-service-account" -}}
+# Microservice specific configuration in here
 {{- end -}}
 ```
 
@@ -208,26 +211,26 @@ serviceAccount:
 * Template file: `_ingress.yaml`
 * Template name: `ffc-helm-library.ingress`
 
-A k8s `Ingress` object that can be configured for Nginx or AWS ALB (Amazon Load Balancer).
+A K8s `Ingress` object that can be configured for Nginx or AWS ALB (Amazon Load Balancer).
 
 A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.ingress" (list . "ffc-demo-web.ingress") -}}
-{{- define "ffc-demo-web.ingress" -}}
+{{- include "ffc-helm-library.ingress" (list . "ffc-microservice.ingress") -}}
+{{- define "ffc-microservice.ingress" -}}
 metadata:
   annotations:
-    <nginx-ingress-annotations>
+    <map_of_nginx-ingress-annotations>
 {{- end -}}
 ```
 A basic ALB `Ingress` object would involve the creation of `templates/ingress-alb.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.ingress" (list . "ffc-demo-web.ingress-alb") -}}
-{{- define "ffc-demo-web.ingress-alb" -}}
+{{- include "ffc-helm-library.ingress" (list . "ffc-microservice.ingress-alb") -}}
+{{- define "ffc-microservice.ingress-alb" -}}
 metadata:
   annotations:
-    <alb-ingress-annotation>
+    <map_of_alb-ingress-annotation>
 {{- end -}}
 ```
 
@@ -259,12 +262,15 @@ ingress:
 * Template file: `_postgres-service.yaml`
 * Template name: `ffc-helm-library.postgres-service`
 
-(TODO: add description - this is an external service type)
+A K8s `Service` object of type `ExternalName` configured to refer to a Postgres database hosted on a server outside of the K8s cluster such as AWS RDS.
 
 A basic usage of this object template would involve the creation of `templates/postgres-service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-TODO
+{{- include "ffc-helm-library.postgres-service" (list . "ffc-microservice.postgres-service") -}}
+{{- define "ffc-microservice.postgres-service" -}}
+# Microservice specific configuration in here
+{{- end -}}
 ```
 
 #### Required values
@@ -283,12 +289,15 @@ postgresService:
 * Template file: `_role-binding.yaml`
 * Template name: `ffc-helm-library.role-binding`
 
-(TODO: add description, intended only for PR so include the if in the template (TODO TODO))
+A K8s `RoleBinding` object used to bind a role to a user as part of RBAC configuration in the K8s cluster.
 
 A basic usage of this object template would involve the creation of `templates/role-binding.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-TODO
+{{- include "ffc-helm-library.role-binding" (list . "ffc-microservice.role-binding") -}}
+{{- define "ffc-microservice.role-binding" -}}
+# Microservice specific configuration in here
+{{- end -}}
 ```
 
 #### Required values
@@ -304,14 +313,17 @@ workstream: <string>
 * Template file: `_secret.yaml`
 * Template name: `ffc-helm-library.secret`
 
-(TODO: add description)
+A K8s `Secret` object to host sensitive data such as a password or token.
 
-A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
-
-(Include the required data override)
+A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data :
 
 ```
-TODO
+{{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
+{{- define "ffc-microservice.secret" -}}
+data:
+  <key1>: <value1>
+  ...
+{{- end -}}
 ```
 
 #### Required values
@@ -329,14 +341,15 @@ secret:
 * Template file: `_service.yaml`
 * Template name: `ffc-helm-library.service`
 
-(TODO: add description)
+A generic K8s `Service` object requiring a service type to be set.
 
 A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
-(Include the required data override)
-
 ```
-TODO
+{{- include "ffc-helm-library.service" (list . "ffc-microservice.service") -}}
+{{- define "ffc-microservice.service" -}}
+# Microservice specific configuration in here
+{{- end -}}
 ```
 
 #### Required values
@@ -350,38 +363,70 @@ service:
 
 ## Helper templates
 
-In addition to the k8s object templates described above, a number of helper templates are defined in `_helpers.tpl` that are both used within the library chart and available to use within a consuming parent chart.
+In addition to the K8s object templates described above, a number of helper templates are defined in `_helpers.tpl` that are both used within the library chart and available to use within a consuming parent chart.
 
 ### Default check required message
 
 * Template name: `ffc-helm-library.default-check-required-msg`
+* Usage: `{{- include "ffc-helm-library.default-check-required-msg" . }}`
 
-(TODO: add description and usage)
+A template defining the default message to print when checking for a required value within the library. This is not designed to be used outside of the library.
 
 ### Labels
 
 * Template name: `ffc-helm-library.labels`
+* Usage: `{{- include "ffc-helm-library.labels" . }}`
 
-(TODO: add description and usage)
+Common labels to apply to `metadata` of all K8s objects on the FFC K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Selector labels
 
 * Template name: `ffc-helm-library.selector-labels`
+* Usage: `{{- include "ffc-helm-library.selector-labels" . }}`
 
-(TODO: add description and usage)
+Common selector labels that can be applied where necessary to K8s objects on the FFC K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Http GET probe
 
 * Template name: `ffc-helm-library.http-get-probe`
+* Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
 
-(TODO: add description and usage)
+Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
-Settings for an http GET probe to be used for readiness or liveness
+```
+path: <string>
+port: <integer>
+initialDelaySeconds: <integer>
+periodSeconds: <integer>
+failureThreshold: <integer>
+```
 
 ### Exec probe
 
 * Template name: `ffc-helm-library.exec-probe`
+* Usage: `{{- include "ffc-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
 
-(TODO: add description and usage)
+Template for configuration of an "exec" probe that runs a local script, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
-Settings for a Node exec probe to be used for readiness or liveness
+```
+script: <string>
+initialDelaySeconds: <integer>
+periodSeconds: <integer>
+failureThreshold: <integer>
+```
+
+## Licence
+
+THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
+
+The following attribution statement MUST be cited in your products and applications when using this information.
+
+>Contains public sector information licensed under the Open Government license v3
+
+### About the licence
+
+The Open Government Licence (OGL) was developed by the Controller of Her Majesty's Stationery Office (HMSO) to enable information providers in the public sector to license the use and re-use of their information under a common open licence.
+
+It is designed to encourage use and re-use of information freely and flexibly, with only a few conditions.
