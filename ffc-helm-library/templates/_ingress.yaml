@@ -1,0 +1,33 @@
+{{- define "ffc-helm-library.ingress.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  labels:
+    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{  required (printf $requiredMsg ".ingress.class") .Values.ingress.class | quote }}
+spec:
+  rules:
+{{- if .Values.ingress.endpoint }}
+  {{- if .Values.pr }}
+  - host: {{ .Values.ingress.endpoint }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  {{ else }}
+  - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
+  {{- end }}
+    http:
+{{ else }}
+  - http:
+{{- end }}
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+          servicePort: {{ required (printf $requiredMsg "container.port") .Values.container.port }}
+{{- end }}
+{{- define "ffc-helm-library.ingress" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
+{{- end -}}
+
