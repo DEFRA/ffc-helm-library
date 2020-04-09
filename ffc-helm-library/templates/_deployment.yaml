@@ -8,7 +8,7 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  replicas: {{ required (printf $requiredMsg "deployment.replicas") .Values.deployment.replicas | quote }}
+  replicas: {{ required (printf $requiredMsg "deployment.replicas") .Values.deployment.replicas }}
   minReadySeconds: {{ required (printf $requiredMsg "deployment.minReadySeconds") .Values.deployment.minReadySeconds }}
   strategy: {}
   selector:
