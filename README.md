@@ -241,7 +241,7 @@ The following values need to be set in the parent chart's `values.yaml` in addit
 ```
 ingress:
   class: <string>
-container:
+service:
   port: <integer>
 ```
 

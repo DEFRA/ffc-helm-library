@@ -22,10 +22,10 @@ spec:
   - http:
 {{- end }}
       paths:
-      - path: /?(.*)
+      - path: /*
         backend:
           serviceName: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-          servicePort: {{ required (printf $requiredMsg "container.port") .Values.container.port }}
+          servicePort: {{ required (printf $requiredMsg "service.port") .Values.service.port }}
 {{- end }}
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
