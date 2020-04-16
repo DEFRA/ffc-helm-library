@@ -23,6 +23,9 @@ spec:
         redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
     spec:
       priorityClassName: {{ required (printf $requiredMsg "deployment.priorityClassName") .Values.deployment.priorityClassName | quote }}
+      {{- if .Values.serviceAccount.roleArn }}
+      serviceAccountName: {{ .Values.serviceAccount.name | quote }}
+      {{- end }}
       restartPolicy: {{ required (printf $requiredMsg "deployment.restartPolicy") .Values.deployment.restartPolicy | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
