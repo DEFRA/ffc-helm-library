@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.configMap.name | quote }}
+  name: {{ required (printf $requiredMsg "configMap.name") .Values.configMap.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
