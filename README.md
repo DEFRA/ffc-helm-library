@@ -84,10 +84,36 @@ A basic usage of this object template would involve the creation of `templates/c
 #### Required values
 
 The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
 ```
 container:
   port: <integer>
+```
+
+### ConfigMap template
+
+* Template file: `_config-map.yaml`
+* Template name: `ffc-helm-library.config-map`
+
+A K8s `ConfigMap` object object to host non-sensitive container configuration data.
+
+A basic usage of this object template would involve the creation of `templates/config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
+
+```
+{{- include "ffc-helm-library.config-map" (list . "ffc-microservice.config-map") -}}
+{{- define "ffc-microservice.config-map" -}}
+data:
+  <key1>: <value1>
+  ...
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+secret:
+  name: <string>
 ```
 
 ### Container template
@@ -178,6 +204,14 @@ The following value can optionally be set in the parent chart's `values.yaml` to
 ```
 deployment:
   imagePullSecret: <string>
+```
+
+The following value can optionally be set in the parent chart's `values.yaml` to link the deployment to a service account K8s object:
+
+```
+serviceAccount:
+  name: <string>
+  roleArn: <string>
 ```
 
 ### EKS service account template

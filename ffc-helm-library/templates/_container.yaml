@@ -2,6 +2,15 @@
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 image: {{ required (printf $requiredMsg "image") .Values.image | quote }}
+envFrom:
+{{- if .Values.configMap }}
+- configMapRef:
+    name: {{ .Values.configMap.name }}
+{{- end }}
+{{- if .Values.secret }}
+- secretRef:
+    name: {{ .Values.secret.name }}
+{{- end }}
 {{- if .Values.container.command }}
 command:
   {{- toYaml .Values.container.command | nindent 12 }}
