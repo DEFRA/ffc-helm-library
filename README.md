@@ -89,33 +89,6 @@ container:
   port: <integer>
 ```
 
-### ConfigMap template
-
-* Template file: `_config-map.yaml`
-* Template name: `ffc-helm-library.config-map`
-
-A K8s `ConfigMap` object object to host non-sensitive container configuration data.
-
-A basic usage of this object template would involve the creation of `templates/config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
-
-```
-{{- include "ffc-helm-library.config-map" (list . "ffc-microservice.config-map") -}}
-{{- define "ffc-microservice.config-map" -}}
-data:
-  <key1>: <value1>
-  ...
-{{- end -}}
-```
-
-#### Required values
-
-The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-secret:
-  name: <string>
-```
-
 ### Container template
 
 * Template file: `_container.yaml`
@@ -159,6 +132,61 @@ The following values can optionally be set in the parent chart's `values.yaml` t
 container:
   command: <list of strings>
   args: <list of strings>
+```
+
+### Container ConfigMap template
+
+* Template file: `_containter-config-map.yaml`
+* Template name: `ffc-helm-library.containter-config-map`
+
+A K8s `ConfigMap` object object to host non-sensitive container configuration data.
+
+A basic usage of this object template would involve the creation of `templates/containter-config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
+
+```
+{{- include "ffc-helm-library.containter-config-map" (list . "ffc-microservice.containter-config-map") -}}
+{{- define "ffc-microservice.containter-config-map" -}}
+data:
+  <key1>: <value1>
+  ...
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+containerConfigMap:
+  name: <string>
+```
+
+### Container Secret template
+
+* Template file: `_containter-secret.yaml`
+* Template name: `ffc-helm-library.containter-secret`
+
+A K8s `Secret` object to host sensitive data such as a password or token in a container.
+
+A basic usage of this object template would involve the creation of `templates/containter-secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data :
+
+```
+{{- include "ffc-helm-library.containter-secret" (list . "ffc-microservice.containter-secret") -}}
+{{- define "ffc-microservice.containter-secret" -}}
+data:
+  <key1>: <value1>
+  ...
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+containerSecret:
+  name: <string>
+  type: <string>
 ```
 
 ### Deployment template

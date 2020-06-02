@@ -3,13 +3,13 @@
 name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 image: {{ required (printf $requiredMsg "image") .Values.image | quote }}
 envFrom:
-{{- if .Values.configMap }}
+{{- if .Values.containerConfigMap }}
 - configMapRef:
-    name: {{ .Values.configMap.name }}
+    name: {{ .Values.containerConfigMap.name }}
 {{- end }}
-{{- if .Values.secret }}
+{{- if .Values.containerSecret }}
 - secretRef:
-    name: {{ .Values.secret.name }}
+    name: {{ .Values.containerSecret.name }}
 {{- end }}
 {{- if .Values.container.command }}
 command:
