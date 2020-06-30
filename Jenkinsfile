@@ -1,5 +1,7 @@
 @Library('defra-library@v-8') _
 
+import uk.gov.defra.ffc.Version
+
 def pr = ''
 def repoName = ''
 def versionFileName = "VERSION"
@@ -17,11 +19,11 @@ node {
     }
 
     stage('test') {
-      sh("cat $repoName/Chart.yaml | yq r - version")
-      sh("git show origin/master:$repoName/Chart.yaml | yq r - version")
+      def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
+      def previousVersion = sh(returnStdout: true, script:"git show origin/master:$repoName/Chart.yaml | yq r - version")
+      Version.errorOnNoVersionIncrement(this, previousVersion, currentVersion)
     }
 
-  
 
     if (pr != '') {
       stage('Verify version incremented') {
