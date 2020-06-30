@@ -27,7 +27,7 @@ node {
     }
     else {
       stage('Package Helm Library Chart') {
-        
+        sh("helm package $repoName")
       }
     }
 
