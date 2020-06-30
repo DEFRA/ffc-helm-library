@@ -15,7 +15,7 @@ node {
     stage('Set PR and version variables') {
       (repoName, pr, versionTag) = build.getVariables(version.getFileVersion(versionFileName))
     }
-
+   pr =''
     if (pr != '') {
       stage('Verify version incremented') {
         version.verifyFileIncremented(versionFileName)
