@@ -20,16 +20,8 @@ node {
       }
     }
     else {
-      stage('Trigger GitHub release') {
-        withCredentials([
-          string(credentialsId: 'github-auth-token', variable: 'gitToken')
-        ]) {
-          def releaseSuccess = release.trigger(versionTag, repoName, versionTag, gitToken)
-
-          if (releaseSuccess) {
-            release.addSemverTags(versionTag, repoName)
-          }
-        }
+      stage('Package Helm Library Chart') {
+        
       }
     }
     stage('Set GitHub status as success'){
