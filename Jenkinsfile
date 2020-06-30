@@ -1,5 +1,6 @@
 @Library('defra-library@v-8') _
 
+import uk.gov.defra.ffc.Version
 
 def pr = ''
 def repoName = ''
