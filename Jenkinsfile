@@ -11,12 +11,18 @@ node {
     stage('Set GitHub status as pending'){
       build.setGithubStatusPending()
     }
+
     stage('Set PR and version variables') {
       (repoName, pr, versionTag) = build.getVariables(version.getFileVersion(versionFileName))
     }
+
     if (pr != '') {
       stage('Verify version incremented') {
         version.verifyFileIncremented(versionFileName)
+      }
+
+      stage('Helm lint') {
+        test.lintHelm(repoName)
       }
     }
     else {
@@ -24,6 +30,7 @@ node {
         
       }
     }
+    
     stage('Set GitHub status as success'){
       build.setGithubStatusSuccess()
     }
