@@ -15,7 +15,11 @@ node {
     stage('Set PR and version variables') {
       (repoName, pr, versionTag) = build.getVariables(version.getFileVersion(versionFileName))
     }
-    
+
+    stage('test') {
+      sh("cat $repoName/Chart.yaml | yq r - version")
+    }
+
     if (pr != '') {
       stage('Verify version incremented') {
         version.verifyFileIncremented(versionFileName)
@@ -25,11 +29,7 @@ node {
         sh("helm lint $repoName")
       }
     }
-    else {
-      stage('Package Helm Library Chart') {
-        sh("helm package $repoName")
-      }
-    }
+    
 
     stage('Set GitHub status as success'){
       build.setGithubStatusSuccess()
