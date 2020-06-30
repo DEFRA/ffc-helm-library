@@ -18,7 +18,10 @@ node {
 
     stage('test') {
       sh("cat $repoName/Chart.yaml | yq r - version")
+      sh("git show origin/master:$repoName/Chart.yaml | yq r - version")
     }
+
+  
 
     if (pr != '') {
       stage('Verify version incremented') {
