@@ -21,8 +21,8 @@ node {
         version.verifyFileIncremented(versionFileName)
       }
 
-      stage('Helm lint') {
-        test.lintHelm(repoName)
+      stage('Helm lint') { 
+        sh("helm lint $repoName")
       }
     }
     else {
@@ -30,7 +30,7 @@ node {
         
       }
     }
-    
+
     stage('Set GitHub status as success'){
       build.setGithubStatusSuccess()
     }
