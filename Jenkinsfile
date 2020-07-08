@@ -43,7 +43,9 @@ node {
           git(credentialsId: 'ffc-jenkins-pipeline-library-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
           sh("mv ../$packageName .")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
-          sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin")
+          sh("git add $packageName")
+          sh("git commit --author=\"FFC Jenkins\" -am \"Add new package version $currentVersion\""
+          sh("git push origin master")
           deleteDir()
         }
       }
