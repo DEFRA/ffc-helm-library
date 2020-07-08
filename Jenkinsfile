@@ -34,8 +34,7 @@ node {
       stage('Publish Helm chart') {
         sh("helm package $repoName")
 
-        // def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version").trim()
-        def currentVersion = '0.3.3'
+        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version").trim()
         def packageName = "$repoName-${currentVersion}.tgz"
         def helmRepoDir = 'helm-repo'
         sh("rm -fr $helmRepoDir")
