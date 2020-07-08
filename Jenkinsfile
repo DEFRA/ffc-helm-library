@@ -40,12 +40,14 @@ node {
         sh("rm -fr $helmRepoDir")
 
         dir("$helmRepoDir") {
-          git(credentialsId: 'ffc-helm-repository-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
-          sh("mv ../$packageName .")
-          sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
-          sh("git add $packageName")
-          sh("git -c \"user.name=FFC Jenkins\" -c \"user.email=jenkins@noemail.com\" commit -am \"Add new package version $currentVersion\"")
-          sh("git push origin master")
+          sshagent(['ffc-helm-repository-deploy-key']) {
+            git(credentialsId: 'ffc-helm-repository-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
+            sh("mv ../$packageName .")
+            sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
+            sh("git add $packageName")
+            sh("git -c \"user.name=FFC Jenkins\" -c \"user.email=jenkins@noemail.com\" commit -am \"Add new package version $currentVersion\"")
+            sh("git push origin master")
+          }
           deleteDir()
         }
       }
