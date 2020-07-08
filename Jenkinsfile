@@ -40,9 +40,9 @@ node {
         sh("rm -fr $helmRepoDir")
 
         dir("$helmRepoDir") {
-          git(url: 'https://github.com/DEFRA/ffc-helm-repository.git')
+          git(url: 'https://github.com/DEFRA/ffc-helm-repository.git', credentialsId: 'github-auth-token')
           sh('ls')
-          sh("mv ../$packageName .")
+          sh("mv ../$packageName $packageName")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
           sh('git status')
           // sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin master")
