@@ -5,6 +5,7 @@ kind: AzureIdentity
 metadata:
   name: {{ required (printf $requiredMsg "azureIdentity.name") .Values.azureIdentity.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  labels: {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
   type: 0
   resourceID: {{ required (printf $requiredMsg "azureIdentity.resourceID") .Values.azureIdentity.resourceID | quote }}
