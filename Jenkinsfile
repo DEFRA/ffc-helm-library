@@ -40,10 +40,10 @@ node {
         sh("rm -fr $helmRepoDir")
 
         dir("$helmRepoDir") {
-          git(url: 'https://github.com/DEFRA/ffc-helm-repository.git', credentialsId: 'jenkins-ffc-git-ssh')
+          git(credentialsId: 'ffc-jenkins-pipeline-library-deploy-key', url: "git@github.com:DEFRA/${repoName}.git")
           sh("mv ../$packageName .")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
-          sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin master")
+          sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin")
           deleteDir()
         }
       }
