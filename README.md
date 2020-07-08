@@ -406,8 +406,10 @@ secret:
 The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-resourceID: <string>
-clientID: <string>
+azureIdentity:
+  name:
+  resourceID: 
+  clientID:
 
 ```
 
@@ -420,8 +422,9 @@ clientID: <string>
 The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
 
 ```
-azureIdentity: <string>
-selector: <string>
+azureIdentityBinding:
+  name: 
+  selector: 
 
 ```
 
