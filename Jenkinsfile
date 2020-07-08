@@ -17,8 +17,6 @@ node {
       (repoName, pr) = build.getVariables('')
     }
 
-    pr = ''
-
     if (pr != '') {
       stage('Verify version incremented') {
         def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
@@ -45,7 +43,7 @@ node {
             sh("mv ../$packageName .")
             sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
             sh("git add $packageName")
-            sh("git -c \"user.name=FFC Jenkins\" -c \"user.email=jenkins@noemail.com\" commit -am \"Add new package version $currentVersion\"")
+            sh("git -c \"user.name=FFC Jenkins\" -c \"user.email=jenkins@noemail.com\" commit -am \"Add new version $currentVersion\"")
             sh("git push origin master")
           }
           deleteDir()
