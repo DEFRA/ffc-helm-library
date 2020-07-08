@@ -41,7 +41,7 @@ node {
 
         dir("$helmRepoDir") {
           git(url: 'https://github.com/DEFRA/ffc-helm-repository.git')
-          sh(ls)
+          sh('ls')
           sh("mv ../$packageName .")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
           sh('git status')
