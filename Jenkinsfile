@@ -44,7 +44,7 @@ node {
           sh("mv ../$packageName .")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
           sh("git add $packageName")
-          sh("git commit --author=\"FFC Jenkins\" -am \"Add new package version $currentVersion\"")
+          sh("git commit --author=\"FFC Jenkins <jenkins@noemail.com>\" -am \"Add new package version $currentVersion\"")
           sh("git push origin master")
           deleteDir()
         }
