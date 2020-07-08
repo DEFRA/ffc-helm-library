@@ -34,7 +34,7 @@ node {
       stage('Publish Helm chart') {
         sh("helm package $repoName")
 
-        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
+        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version").trim()
         def packageName = "$repoName-${currentVersion}.tgz"
         def helmRepoDir = 'helm-repo'
         sh("rm -fr $helmRepoDir")
@@ -42,7 +42,7 @@ node {
         dir("$helmRepoDir") {
           git(url: 'https://github.com/DEFRA/ffc-helm-repository.git', credentialsId: 'github-auth-token')
           sh('ls')
-          sh("mv ../$packageName $packageName")
+          sh("mv ../$packageName .")
           sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
           sh('git status')
           // sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin master")
