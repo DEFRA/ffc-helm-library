@@ -17,6 +17,8 @@ node {
       (repoName, pr) = build.getVariables('')
     }
 
+    pr = ''
+
     if (pr != '') {
       stage('Verify version incremented') {
         def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
@@ -24,10 +26,29 @@ node {
         Version.errorOnNoVersionIncrement(this, previousVersion, currentVersion)
       }
 
-      stage('Helm lint') { 
+      stage('Helm lint') {
         sh("helm lint $repoName")
       }
-    }    
+    }
+    else {
+      stage('Publish Helm chart') {
+        sh("helm package $repoName")
+
+        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
+        def packageName = "$repoName-${currentVersion}.tgz"
+        def helmRepoDir = 'helm-repo'
+        sh("rm -fr $helmRepoDir")
+
+        dir("$helmRepoDir") {
+          git(credentialsId: github-auth-token, url: 'https://github.com/DEFRA/ffc-helm-repository.git')
+          sh("mv ../$packageName .")
+          sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
+          sh('git status')
+          // sh("git add $packageName ; git commit -am \"Add new package version $currentVersion\" ; git push origin master")
+          deleteDir()
+        }
+      }
+    }
 
     stage('Set GitHub status as success'){
       build.setGithubStatusSuccess()
