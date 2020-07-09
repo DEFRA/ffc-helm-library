@@ -23,7 +23,7 @@ spec:
       labels:
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
     annotations:
-        redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
+      redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
     spec:
       priorityClassName: {{ required (printf $requiredMsg "deployment.priorityClassName") .Values.deployment.priorityClassName | quote }}
       {{- if .Values.serviceAccount }}
