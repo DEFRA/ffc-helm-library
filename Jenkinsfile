@@ -40,14 +40,12 @@ node {
         sh("rm -fr $helmRepoDir")
 
         dir("$helmRepoDir") {
-          // sshagent(['ffc-helm-repository-deploy-key']) {
-            // git(credentialsId: 'ffc-helm-repository-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
-          withCredentials([string(credentialsId: 'github-auth-token', variable: 'gitToken')]) {
+          withCredentials([string(credentialsId: 'github-ffcplatform-access-token', variable: 'gitToken')]) {
             git(url: 'https://github.com/DEFRA/ffc-helm-repository.git')
             sh("mv ../$packageName .")
             sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
             sh("git add $packageName")
-            sh("git commit -am \"Add new version $currentVersion\" --author=\"FFC Jenkins <jenkins@noemail.com>\"")
+            sh("git commit -am \"Add new version $currentVersion\"")
             sh("git push https://$gitToken@github.com/DEFRA/ffc-helm-repository.git")
           }
           deleteDir()
