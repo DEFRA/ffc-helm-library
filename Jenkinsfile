@@ -17,6 +17,8 @@ node {
       (repoName, pr) = build.getVariables('')
     }
 
+    pr = ''
+
     if (pr != '') {
       stage('Verify version incremented') {
         def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
@@ -38,14 +40,16 @@ node {
         sh("rm -fr $helmRepoDir")
 
         dir("$helmRepoDir") {
-          sshagent(['ffc-helm-repository-deploy-key']) {
-            git(credentialsId: 'ffc-helm-repository-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
+          // sshagent(['ffc-helm-repository-deploy-key']) {
+            // git(credentialsId: 'ffc-helm-repository-deploy-key', url: "git@github.com:DEFRA/ffc-helm-repository.git")
+          withCredentials([string(credentialsId: 'github-auth-token', variable: 'gitToken')]) {
+            git(url: 'https://github.com/DEFRA/ffc-helm-repository.git')
             sh("mv ../$packageName .")
             sh('helm repo index . --url $HELM_CHART_REPO_PUBLIC')
             sh("git add $packageName")
-            sh("git -c \"user.name=FFC Jenkins\" -c \"user.email=jenkins@noemail.com\" commit -am \"Add new version $currentVersion\"")
-            sh("git push origin master")
-          }
+            sh("git commit -am \"Add new version $currentVersion\" --author=\"FFC Jenkins <jenkins@noemail.com>\"")
+            sh("git push https://$gitToken@github.com/DEFRA/ffc-helm-repository.git")
+          // }
           deleteDir()
         }
       }
