@@ -49,7 +49,7 @@ node {
             sh("git add $packageName")
             sh("git commit -am \"Add new version $currentVersion\" --author=\"FFC Jenkins <jenkins@noemail.com>\"")
             sh("git push https://$gitToken@github.com/DEFRA/ffc-helm-repository.git")
-          // }
+          }
           deleteDir()
         }
       }
