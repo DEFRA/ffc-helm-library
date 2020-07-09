@@ -17,12 +17,10 @@ node {
       (repoName, pr) = build.getVariables('')
     }
 
-    pr = ''
-
     if (pr != '') {
       stage('Verify version incremented') {
-        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version")
-        def previousVersion = sh(returnStdout: true, script:"git show origin/master:$repoName/Chart.yaml | yq r - version")
+        def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version").trim()
+        def previousVersion = sh(returnStdout: true, script:"git show origin/master:$repoName/Chart.yaml | yq r - version").trim()
         Version.errorOnNoVersionIncrement(this, previousVersion, currentVersion)
       }
 
