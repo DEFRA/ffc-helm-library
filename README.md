@@ -397,6 +397,36 @@ secret:
   name: <string>
   type: <string>
 ```
+### Azure Identity template
+* Template file: `_azure-identity.yaml`
+* Template name: `ffc-helm-library.azure-identity`
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+azureIdentity:
+  name:
+  resourceID: 
+  clientID:
+
+```
+
+### Azure Identity Binding template
+* Template file: `_azure-identity-binding.yaml`
+* Template name: `ffc-helm-library.azure-identity-binding`
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+azureIdentityBinding:
+  name: 
+  selector: 
+
+```
 
 ### Service template
 
