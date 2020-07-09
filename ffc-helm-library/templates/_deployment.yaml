@@ -17,11 +17,11 @@ spec:
   template:
     metadata:
       namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
-      labels:
-        {{- include "ffc-helm-library.labels" . | nindent 8 }}
-      {{- if .Values.azureIdentityBinding.selector }}
+      {{- if .Values.azureIdentityBinding }}
       aadpodidbinding: {{ .Values.azureIdentityBinding.selector | quote }}
       {{- end }}
+      labels:
+        {{- include "ffc-helm-library.labels" . | nindent 8 }}
     annotations:
         redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
     spec:
