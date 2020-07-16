@@ -6,11 +6,9 @@ def pr = ''
 def repoName = ''
 
 node {
-  checkout scm
-
   try {
-    stage('Set GitHub status as pending'){
-      build.setGithubStatusPending()
+    stage('Checkout source code') {
+      build.checkoutSourceCode()
     }
 
     stage('Set PR and version variables') {
@@ -51,11 +49,7 @@ node {
       }
     }
 
-    stage('Set GitHub status as success'){
-      build.setGithubStatusSuccess()
-    }
   } catch(e) {
-    build.setGithubStatusFailure(e.message)
     notifySlack.buildFailure(e.message, "#generalbuildfailures")
     throw e
   }
