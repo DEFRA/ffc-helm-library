@@ -18,8 +18,8 @@ spec:
     metadata:
       namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
       labels:
-        {{- if .Values.azureIdentityBinding }}
-        aadpodidbinding: {{ required (printf $requiredMsg "azureIdentityBinding.selector") .Values.azureIdentityBinding.selector | quote }}
+        {{- if .Values.azureIdentity }}
+        aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
         {{- end }}
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
       annotations:

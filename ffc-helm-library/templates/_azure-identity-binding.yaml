@@ -3,14 +3,13 @@
 apiVersion: "aadpodidentity.k8s.io/v1"
 kind: AzureIdentityBinding
 metadata:
-  name: {{ required (printf $requiredMsg "azureIdentityBinding.name") .Values.azureIdentityBinding.name | quote }}
+  name: {{ required (printf $requiredMsg "name") .Values.name }}-identity-binding
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels: {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  azureIdentity: {{ required (printf $requiredMsg "azureIdentity.name") .Values.azureIdentity.name | quote }}
-  selector: {{ required (printf $requiredMsg "azureIdentityBinding.selector") .Values.azureIdentityBinding.selector | quote }}
+  azureIdentity: {{ required (printf $requiredMsg "name") .Values.name }}-identity
+  selector: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
 {{- end -}}
 {{- define "ffc-helm-library.azure-identity-binding" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-identity-binding.tpl") -}}
 {{- end -}}
-  
