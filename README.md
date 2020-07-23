@@ -65,6 +65,50 @@ namespace: <string>
 environment: <string>
 ```
 
+### Azure Identity template
+
+* Template file: `_azure-identity.yaml`
+* Template name: `ffc-helm-library.azure-identity`
+
+A K8s `AzureIdentity` object. Must be used in conjunction with the `AzureIdentityBinding` described below. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity`.
+
+A basic usage of this object template would involve the creation of `templates/azure-identity.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.azure-identity" (list . "ffc-microservice.azure-identity") -}}
+{{- define "ffc-microservice.azure-identity" -}}
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+azureIdentity:
+  resourceID:
+  clientID:
+```
+
+### Azure Identity Binding template
+
+* Template file: `_azure-identity-binding.yaml`
+* Template name: `ffc-helm-library.azure-identity-binding`
+
+A K8s `AzureIdentityBinding` object. Must be used in conjunction with the `AzureIdentity` described above. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity-binding`.
+
+A basic usage of this object template would involve the creation of `templates/azure-identity-binding.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.azure-identity-binding" (list . "ffc-microservice.azure-identity-binding") -}}
+{{- define "ffc-microservice.azure-identity-binding" -}}
+{{- end -}}
+```
+
+#### Required values
+
+Only the globally required values [listed above](#all-template-required-values).
+
 ### Cluster IP service template
 
 * Template file: `_cluster-ip-service.yaml`
@@ -396,36 +440,6 @@ The following values need to be set in the parent chart's `values.yaml` in addit
 secret:
   name: <string>
   type: <string>
-```
-### Azure Identity template
-* Template file: `_azure-identity.yaml`
-* Template name: `ffc-helm-library.azure-identity`
-
-#### Required values
-
-The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-azureIdentity:
-  name:
-  resourceID: 
-  clientID:
-
-```
-
-### Azure Identity Binding template
-* Template file: `_azure-identity-binding.yaml`
-* Template name: `ffc-helm-library.azure-identity-binding`
-
-#### Required values
-
-The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-azureIdentityBinding:
-  name: 
-  selector: 
-
 ```
 
 ### Service template
