@@ -6,6 +6,8 @@ metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name }}-identity
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels: {{- include "ffc-helm-library.labels" . | nindent 4 }}
+  annotations:
+    aadpodidentity.k8s.io/Behavior: namespaced
 spec:
   type: 0
   resourceID: {{ required (printf $requiredMsg "azureIdentity.resourceID") .Values.azureIdentity.resourceID | quote }}
