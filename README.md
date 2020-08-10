@@ -363,6 +363,47 @@ ingress:
   server: <string>
 ```
 
+### Azure Ingress template
+
+* Template file: `_azure-ingress.yaml`
+* Template name: `ffc-helm-library.azure-ingress`
+
+A K8s `Ingress` object that can be configured for Nginx for use in Azure.
+
+A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.azure-ingress" (list . "ffc-microservice.ingress") -}}
+{{- define "ffc-microservice.ingress" -}}
+metadata:
+  annotations:
+    <map_of_nginx-ingress-annotations>
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+ingress:
+  class: <string>
+service:
+  port: <integer>
+```
+
+#### Optional values
+
+The following values can optionally be set in the parent chart's `values.yaml` to set the value of `host`:
+
+```
+pr: <string>
+ingress:
+  endpoint: <string>
+ingress:
+  server: <string>
+```
+
 ### Postgres service template
 
 * Template file: `_postgres-service.yaml`
