@@ -1,6 +1,6 @@
 {{- define "ffc-helm-library.ingress.tpl" -}}
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
@@ -30,4 +30,3 @@ spec:
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
 {{- end -}}
-
