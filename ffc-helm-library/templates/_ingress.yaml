@@ -30,4 +30,3 @@ spec:
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
 {{- end -}}
-
