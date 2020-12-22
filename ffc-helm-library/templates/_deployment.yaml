@@ -45,7 +45,7 @@ spec:
       -
 {{ include "ffc-helm-library.container.tpl" . | indent 8 }}
       volumes:
-        - name: health-dir
+        - name: temp-dir
           emptyDir: {}
 {{- end }}
 {{- define "ffc-helm-library.deployment" -}}
