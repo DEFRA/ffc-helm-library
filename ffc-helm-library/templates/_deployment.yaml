@@ -48,7 +48,7 @@ spec:
 {{- define "ffc-helm-library.deployment" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
 {{- end -}}
-  volumes:
-  - name: temp-dir
-    emptyDir: {}
+      volumes:
+      - name: temp-dir
+        emptyDir: {}
 
