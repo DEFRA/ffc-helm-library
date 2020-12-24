@@ -41,6 +41,9 @@ spec:
         fsGroup: {{ required (printf $requiredMsg "deployment.runAsUser") .Values.deployment.runAsUser }}
         runAsUser: {{ required (printf $requiredMsg "deployment.runAsUser") .Values.deployment.runAsUser }}
         runAsNonRoot: {{ required (printf $requiredMsg "deployment.runAsNonRoot") .Values.deployment.runAsNonRoot }}
+      volumes:
+      - name: temp-dir
+        emptyDir: {}
       containers:
       -
 {{ include "ffc-helm-library.container.tpl" . | indent 8 }}
@@ -48,7 +51,5 @@ spec:
 {{- define "ffc-helm-library.deployment" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
 {{- end -}}
-      volumes:
-      - name: temp-dir
-        emptyDir: {}
+
 

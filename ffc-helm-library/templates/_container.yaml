@@ -30,11 +30,11 @@ resources:
   limits:
     memory: {{ required (printf $requiredMsg "container.limitMemory") .Values.container.limitMemory | quote }}
     cpu: {{ required (printf $requiredMsg "container.limitCpu") .Values.container.limitCpu | quote }}
+volumeMounts:
+- mountPath: /tmp
+  name: temp-dir
 {{- end -}}
 {{- define "ffc-helm-library.container" -}}
 {{- println "" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.container.tpl") | indent 8 -}}
 {{- end -}}
-volumeMounts:
-- mountPath: /tmp
-  name: temp-dir
