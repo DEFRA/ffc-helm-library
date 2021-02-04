@@ -1,4 +1,4 @@
-{{- define "ffc-helm-library.horozontal-pod-autoscaler.tpl" -}}
+{{- define "ffc-helm-library.horizontal-pod-autoscaler.tpl" -}}
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -12,6 +12,6 @@ spec:
   minReplicas: {{ required (printf $requiredMsg "minReplicas") .Values.deployment.minReplicas }}
   maxReplicas: {{ required (printf $requiredMsg "maxReplicas") .Values.deployment.maxReplicas }}
 {{- end }}
-{{- define "ffc-helm-library.horozontal-pod-autoscaler" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.horozontal-pod-autoscaler.tpl") -}}
+{{- define "ffc-helm-library.horizontal-pod-autoscaler" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.horizontal-pod-autoscaler.tpl") -}}
 {{- end -}}
