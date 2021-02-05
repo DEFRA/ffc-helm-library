@@ -508,6 +508,70 @@ service:
   type: <string>
 ```
 
+### Horizontal Pod Autoscaler template
+
+* Template file: `_horizontal-pod-autoscaler.yaml`
+* Template name: `helm-library.horizontal-pod-autoscaler`
+
+A k8s `HorizontalPodAutoscaler`.  
+
+A basic usage of this object template would involve the creation of `templates/horizontal-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
+
+```
+{{- include "ffc-helm-library.horizontal-pod-autoscaler" (list . "microservice.horizontal-pod-autoscaler") -}}
+{{- define "microservice.horizontal-pod-autoscaler" -}}
+spec:
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: 100Mi
+{{- end -}}
+
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+deployment:
+  minReplicas: <integer>
+  maxReplicas: <integer>
+```
+
+### Vertical Pod Autoscaler template
+
+* Template file: `_vertical-pod-autoscaler.yaml`
+* Template name: `helm-library.vertical-pod-autoscaler`
+
+A k8s `VerticalPodAutoscaler`.  
+
+A basic usage of this object template would involve the creation of `templates/vertical-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
+
+```
+{{- include "ffc-helm-library.vertical-pod-autoscaler" (list . "microservice.vertical-pod-autoscaler") -}}
+{{- define "microservice.vertical-pod-autoscaler" -}}
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+deployment:
+  updateMode: <string>
+```
+
 ## Helper templates
 
 In addition to the K8s object templates described above, a number of helper templates are defined in `_helpers.tpl` that are both used within the library chart and available to use within a consuming parent chart.

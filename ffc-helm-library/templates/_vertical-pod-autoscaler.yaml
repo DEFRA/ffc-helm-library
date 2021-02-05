@@ -1,0 +1,18 @@
+{{- define "ffc-helm-library.vertical-pod-autoscaler.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata: 
+  name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+spec: 
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+  updatePolicy: 
+    updateMode: {{ required (printf $requiredMsg "updateMode") .Values.deployment.updateMode }}
+{{- end }}
+{{- define "ffc-helm-library.vertical-pod-autoscaler" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.vertical-pod-autoscaler.tpl") -}}
+{{- end -}}
+
