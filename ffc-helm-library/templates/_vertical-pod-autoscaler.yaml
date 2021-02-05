@@ -4,6 +4,9 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata: 
   name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  labels:
+    {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec: 
   targetRef:
     apiVersion: apps/v1
