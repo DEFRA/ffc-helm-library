@@ -4,6 +4,7 @@ import uk.gov.defra.ffc.Version
 
 def pr = ''
 def repoName = ''
+String defaultBranch = 'master'
 
 node {
   try {
@@ -12,11 +13,11 @@ node {
       }
 
       stage('Checkout source code') {
-        build.checkoutSourceCode('master')
+        build.checkoutSourceCode(defaultBranch)
       }
 
     stage('Set PR and version variables') {
-      (repoName, pr) = build.getVariables('')
+      (repoName, pr) = build.getVariables('', defaultBranch)
     }
 
     if (pr != '') {
