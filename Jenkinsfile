@@ -1,18 +1,23 @@
-@Library('defra-library@v-8') _
+@Library('defra-library@v-9') _
 
 import uk.gov.defra.ffc.Version
 
 def pr = ''
 def repoName = ''
+String defaultBranch = 'master'
 
 node {
   try {
-    stage('Checkout source code') {
-      build.checkoutSourceCode()
-    }
+    stage('Ensure clean workspace') {
+        deleteDir()
+      }
+
+      stage('Checkout source code') {
+        build.checkoutSourceCode(defaultBranch)
+      }
 
     stage('Set PR and version variables') {
-      (repoName, pr) = build.getVariables('')
+      (repoName, pr) = build.getVariables('', defaultBranch)
     }
 
     if (pr != '') {
