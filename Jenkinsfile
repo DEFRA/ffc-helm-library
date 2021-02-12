@@ -4,24 +4,18 @@ import uk.gov.defra.ffc.Version
 
 def pr = ''
 def repoName = ''
-String defaultBranch = 'main'
 
 node {
   try {
     stage('Ensure clean workspace') {
         deleteDir()
       }
-
-      stage('Set default branch') {
-        defaultBranch = build.getDefaultBranch(defaultBranch, config.defaultBranch)
-      }
-
       stage('Set environment') {
         environment = config.environment != null ? config.environment : environment
       }
 
       stage('Checkout source code') {
-        build.checkoutSourceCode(defaultBranch)
+        build.checkoutSourceCode('master')
       }
 
     stage('Set PR and version variables') {
