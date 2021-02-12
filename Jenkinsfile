@@ -10,9 +10,6 @@ node {
     stage('Ensure clean workspace') {
         deleteDir()
       }
-      stage('Set environment') {
-        environment = config.environment != null ? config.environment : environment
-      }
 
       stage('Checkout source code') {
         build.checkoutSourceCode('master')
