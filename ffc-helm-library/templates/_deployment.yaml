@@ -23,7 +23,7 @@ spec:
         {{- end }}
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
       annotations:
-        {{- if .Values.useLinkerd }}
+        {{- if .Values.deployment.useLinkerd }}
         linkerd.io/inject: enabled
         config.linkerd.io/proxy-cpu-limit: "1"
         config.linkerd.io/proxy-cpu-request: 1m

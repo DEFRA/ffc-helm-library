@@ -278,6 +278,13 @@ deployment:
   imagePullSecret: <string>
 ```
 
+The following value can be optionally set if a Linkerd sidecar pod should be deployed.  Only required if the application has any web traffic.
+
+```
+deployment:
+  useLinkerd: true
+```
+
 The following value can optionally be set in the parent chart's `values.yaml` to link the deployment to a service account K8s object:
 
 ```
