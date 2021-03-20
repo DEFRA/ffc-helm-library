@@ -25,12 +25,12 @@ spec:
       annotations:
         {{- if .Values.deployment.useLinkerd }}
         linkerd.io/inject: enabled
-        config.linkerd.io/proxy-cpu-limit: "1"
+        config.linkerd.io/proxy-cpu-limit: 20m
         config.linkerd.io/proxy-cpu-request: 1m
         config.linkerd.io/proxy-memory-limit: 80Mi
         config.linkerd.io/proxy-memory-request: 10Mi
         {{- end }}
-        redeployOnChange: {{ required (printf $requiredMsg "deployment.redeployOnChange") .Values.deployment.redeployOnChange | quote }}
+        redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
       priorityClassName: {{ required (printf $requiredMsg "deployment.priorityClassName") .Values.deployment.priorityClassName | quote }}
       {{- if .Values.serviceAccount }}
