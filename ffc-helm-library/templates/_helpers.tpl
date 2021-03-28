@@ -42,6 +42,7 @@ httpGet:
 initialDelaySeconds: {{ required (printf $requiredMsg  "probe.initialDelaySeconds") $settings.initialDelaySeconds }}
 periodSeconds: {{ required (printf $requiredMsg "probe.periodSeconds") $settings.periodSeconds }}
 failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $settings.failureThreshold }}
+timeoutSeconds: {{ required (printf $requiredMsg "probe.timeoutSeconds") $settings.timeoutSeconds }}
 {{- end -}}
 
 {{/*
@@ -58,4 +59,5 @@ exec:
 initialDelaySeconds: {{ required (printf $requiredMsg "probe.initialDelaySeconds") $settings.initialDelaySeconds }}
 periodSeconds: {{ required (printf $requiredMsg "probe.periodSeconds") $settings.periodSeconds }}
 failureThreshold: {{ required (printf $requiredMsg "probe.failureThreshold") $settings.failureThreshold }}
+timeoutSeconds: {{ required (printf $requiredMsg "probe.timeoutSeconds") $settings.timeoutSeconds }}
 {{- end -}}

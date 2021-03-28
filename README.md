@@ -616,6 +616,7 @@ path: <string>
 port: <integer>
 initialDelaySeconds: <integer>
 periodSeconds: <integer>
+timeoutSeconds: <integer>
 failureThreshold: <integer>
 ```
 
@@ -630,6 +631,7 @@ Template for configuration of an "exec" probe that runs a local script, which ca
 script: <string>
 initialDelaySeconds: <integer>
 periodSeconds: <integer>
+timeoutSeconds: <integer>
 failureThreshold: <integer>
 ```
 
