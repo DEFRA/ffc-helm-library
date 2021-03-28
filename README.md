@@ -609,15 +609,23 @@ Common selector labels that can be applied where necessary to K8s objects on the
 * Template name: `ffc-helm-library.http-get-probe`
 * Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
 
-Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). The following values need to be passed to the probe in the `<map_of_probe_values>`:
+Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). 
+
+#### Required values
+The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
 ```
 path: <string>
 port: <integer>
 initialDelaySeconds: <integer>
 periodSeconds: <integer>
-timeoutSeconds: <integer>
 failureThreshold: <integer>
+```
+
+#### Optional values
+
+```
+timeoutSeconds: <integer>
 ```
 
 ### Exec probe
@@ -625,7 +633,10 @@ failureThreshold: <integer>
 * Template name: `ffc-helm-library.exec-probe`
 * Usage: `{{- include "ffc-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
 
-Template for configuration of an "exec" probe that runs a local script, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). The following values need to be passed to the probe in the `<map_of_probe_values>`:
+Template for configuration of an "exec" probe that runs a local script, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)).
+
+#### Required values
+The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
 ```
 script: <string>
@@ -633,6 +644,12 @@ initialDelaySeconds: <integer>
 periodSeconds: <integer>
 timeoutSeconds: <integer>
 failureThreshold: <integer>
+```
+
+#### Optional values
+
+```
+timeoutSeconds: <integer>
 ```
 
 ## Licence
