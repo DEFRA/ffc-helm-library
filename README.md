@@ -409,7 +409,14 @@ ingress:
   endpoint: <string>
 ingress:
   server: <string>
+ingress:
+  type: <string>
+ingress:
+  path: <string>
 ```
+
+The `type` value is used to create a [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types) 
+and should have the value `master` or `minion`.
 
 ### Postgres service template
 
