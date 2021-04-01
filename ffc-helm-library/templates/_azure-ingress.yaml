@@ -13,8 +13,8 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
-    {{- if .Values.ingress.minion }}
-      nginx.org/mergeable-ingress-type: "minion"
+    {{- if .Values.ingress.type }}
+      nginx.org/mergeable-ingress-type: {{ .Values.ingress.type | quote }}
     {{- end }}
     {{- end }}
 spec:
@@ -25,15 +25,19 @@ spec:
   {{ else }}
   - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
   {{- end }}
+  {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
     http:
+  {{- end }}
 {{ else }}
   - http:
 {{- end }}
+{{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
       paths:
       - path: {{ .Values.ingress.path | default "/" | quote }}
         backend:
           serviceName: {{ required (printf $requiredMsg "name") .Values.name | quote }}
           servicePort: {{ required (printf $requiredMsg "service.port") .Values.service.port }}
+{{- end }}
 {{- end }}
 {{- define "ffc-helm-library.azure-ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.tpl") -}}
