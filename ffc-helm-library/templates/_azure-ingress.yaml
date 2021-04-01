@@ -13,6 +13,9 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
+    {{- if .Values.ingress.minion }}
+      nginx.org/mergeable-ingress-type: "minion"
+    {{- end }}
     {{- end }}
 spec:
   rules:
@@ -27,7 +30,7 @@ spec:
   - http:
 {{- end }}
       paths:
-      - path: /
+      - path: {{ .Values.ingress.path | default "/" | quote }}
         backend:
           serviceName: {{ required (printf $requiredMsg "name") .Values.name | quote }}
           servicePort: {{ required (printf $requiredMsg "service.port") .Values.service.port }}
