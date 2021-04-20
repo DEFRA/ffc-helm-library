@@ -418,6 +418,47 @@ ingress:
 The `type` value is used to create a [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types) 
 and should have the value `master` or `minion`.
 
+### Azure Ingress template (master)
+
+* Template file: `_azure-ingress-master.yaml`
+* Template name: `ffc-helm-library.azure-ingress-master`
+
+A K8s `Ingress` object that can be configured for Nginx for use in Azure with a `master` [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types).
+
+Although the `Azure Ingress template` can also be used to create `master` mergeable ingress types.  This template exists to support scenarios where a Helm chart needs to contain both a `master` and a `minion` resource without conflicts in value properties.
+
+A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.azure-ingress-master" (list . "ffc-microservice.ingress") -}}
+{{- define "ffc-microservice.ingress" -}}
+metadata:
+  annotations:
+    <map_of_nginx-ingress-annotations>
+{{- end -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+ingress:
+  class: <string>
+```
+
+#### Optional values
+
+The following values can optionally be set in the parent chart's `values.yaml` to set the value of `host`:
+
+```
+pr: <string>
+ingress:
+  endpoint: <string>
+ingress:
+  server: <string>
+```
+
 ### Postgres service template
 
 * Template file: `_postgres-service.yaml`
