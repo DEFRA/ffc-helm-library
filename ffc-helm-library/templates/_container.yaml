@@ -21,8 +21,8 @@ args:
 {{- end }}
 imagePullPolicy: {{ required (printf $requiredMsg "container.imagePullPolicy") .Values.container.imagePullPolicy | quote }}
 securityContext:
-  readOnlyRootFilesystem: {{ required (printf $requiredMsg "container.readOnlyRootFilesystem") .Values.container.readOnlyRootFilesystem }}
-  allowPrivilegeEscalation: {{ required (printf $requiredMsg "container.allowPrivilegeEscalation") .Values.container.allowPrivilegeEscalation }}
+  readOnlyRootFilesystem: {{ .Values.container.readOnlyRootFilesystem | default true }}
+  allowPrivilegeEscalation: {{ .Values.container.allowPrivilegeEscalation | default false }}
 resources:
   requests:
     memory: {{ required (printf $requiredMsg "container.requestMemory") .Values.container.requestMemory | quote }}
