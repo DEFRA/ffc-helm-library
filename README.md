@@ -159,9 +159,7 @@ The following values need to be set in the parent chart's `values.yaml` in addit
 ```
 image: <string>
 container:
-  imagePullPolicy: <string>
-  readOnlyRootFilesystem: <boolean>
-  allowPrivilegeEscalation: <boolean>
+  imagePullPolicy: <string>  
   requestMemory: <string>
   requestCpu: <string>
   limitMemory: <string>
@@ -170,12 +168,14 @@ container:
 
 #### Optional values
 
-The following values can optionally be set in the parent chart's `values.yaml` to enable a command with arguments to run within the container:
+The following values can optionally be set in the parent chart's `values.yaml` to enable a command with arguments to run within the container or change the security context:
 
 ```
 container:
   command: <list of strings>
   args: <list of strings>
+  readOnlyRootFilesystem: <boolean>
+  allowPrivilegeEscalation: <boolean>
 ```
 
 ### Container ConfigMap template
@@ -264,18 +264,18 @@ deployment:
   minReadySeconds: <integer>
   redeployOnChange: <string>
   priorityClassName: <string>
-  restartPolicy: <string>
-  runAsUser: <integer>
-  runAsNonRoot: <boolean>
+  restartPolicy: <string>  
 ```
 
 #### Optional values
 
-The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the K8s object:
+The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the K8s object or change the running user:
 
 ```
 deployment:
   imagePullSecret: <string>
+  runAsUser: <integer>
+  runAsNonRoot: <boolean>
 ```
 
 The following value can be optionally set if a Linkerd sidecar pod should be deployed.  Only required if the application has any web traffic.
