@@ -34,9 +34,12 @@ spec:
 {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
       paths:
       - path: {{ .Values.ingress.path | default "/" | quote }}
+        pathType: Prefix
         backend:
-          serviceName: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-          servicePort: {{ required (printf $requiredMsg "service.port") .Values.service.port }}
+          service:
+            name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+            port:
+              number: {{ required (printf $requiredMsg "service.port") .Values.service.port }}
 {{- end }}
 {{- end }}
 {{- define "ffc-helm-library.azure-ingress" -}}
