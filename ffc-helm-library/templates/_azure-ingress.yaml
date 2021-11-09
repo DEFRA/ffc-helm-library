@@ -13,7 +13,7 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
-    {{- if .Values.ingress.type }}
+    {{- if and (.Values.ingress.type) (not .Values.pr) }}
     nginx.org/mergeable-ingress-type: {{ .Values.ingress.type | quote }}
     {{- end }}
     {{- end }}
@@ -21,7 +21,7 @@ spec:
   rules:
 {{- if .Values.ingress.endpoint }}
   {{- if .Values.pr }}
-  - host: {{ .Values.ingress.endpoint }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  - host: {{ .Values.name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
   {{ else }}
   - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
   {{- end }}
