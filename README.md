@@ -700,6 +700,27 @@ failureThreshold: <integer>
 timeoutSeconds: <integer>
 ```
 
+### Cron Job template
+
+* Template file: `_cron-job.yaml`
+* Template name: `helm-library.cron-job`
+
+A k8s `CronJob`.  
+
+A basic usage of this object template would involve the creation of `templates/cron-job.yaml` in the parent Helm chart (e.g. `microservice`) that includes the template defined in `_container.yaml` template:
+
+```
+{{- include "helm-library.cron-job" (list . "microservice.cron-job") -}}
+{{- define "microservice.cron-job" -}}
+spec:
+  template:
+    spec:
+      containers:
+      - {{ include "helm-library.container" (list . "microservice.container") }}
+{{- end -}}
+
+```
+
 ## Licence
 
 THIS INFORMATION IS LICENSED UNDER THE CONDITIONS OF THE OPEN GOVERNMENT LICENCE found at:
