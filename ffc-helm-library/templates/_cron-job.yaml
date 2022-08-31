@@ -13,9 +13,11 @@ spec:
     spec:
       template:
         metadata:
-          {{- if .Values.azureIdentity }}
-          aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
-          {{- end }}
+          labels:
+            {{- include "ffc-helm-library.labels" . | nindent 12 }}
+            {{- if .Values.azureIdentity }}
+            aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
+            {{- end }}
         spec:
           restartPolicy: {{ required (printf $requiredMsg "cronJob.restartPolicy") .Values.cronJob.restartPolicy | quote }}
           securityContext:
