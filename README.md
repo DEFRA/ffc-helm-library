@@ -62,7 +62,6 @@ All the K8s object templates in the library require the following values to be s
 ```
 name: <string>
 namespace: <string>
-environment: <string>
 ```
 
 ### Azure Identity template
@@ -158,8 +157,7 @@ The following values need to be set in the parent chart's `values.yaml` in addit
 
 ```
 image: <string>
-container:
-  imagePullPolicy: <string>  
+container:  
   requestMemory: <string>
   requestCpu: <string>
   limitMemory: <string>
@@ -172,6 +170,7 @@ The following values can optionally be set in the parent chart's `values.yaml` t
 
 ```
 container:
+  imagePullPolicy: <string>
   command: <list of strings>
   args: <list of strings>
   readOnlyRootFilesystem: <boolean>
@@ -254,19 +253,6 @@ spec:
 
 ```
 
-#### Required values
-
-The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-deployment:
-  replicas: <integer>
-  minReadySeconds: <integer>
-  redeployOnChange: <string>
-  priorityClassName: <string>
-  restartPolicy: <string>  
-```
-
 #### Optional values
 
 The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the K8s object or change the running user:
@@ -276,6 +262,10 @@ deployment:
   imagePullSecret: <string>
   runAsUser: <integer>
   runAsNonRoot: <boolean>
+  priorityClassName: <string>
+  restartPolicy: <string>
+  replicas: <integer>
+  minReadySeconds: <integer>
 ```
 
 The following value can be optionally set if a Linkerd sidecar pod should be deployed.  Only required if the application has any web traffic.
@@ -500,14 +490,6 @@ A basic usage of this object template would involve the creation of `templates/r
 {{- define "ffc-microservice.role-binding" -}}
 # Microservice specific configuration in here
 {{- end -}}
-```
-
-#### Required values
-
-The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
-
-```
-workstream: <string>
 ```
 
 ### Secret template

@@ -8,8 +8,8 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  replicas: {{ required (printf $requiredMsg "deployment.replicas") .Values.deployment.replicas }}
-  minReadySeconds: {{ required (printf $requiredMsg "deployment.minReadySeconds") .Values.deployment.minReadySeconds }}
+  replicas: {{ .Values.deployment.replicas | default 1 }}
+  minReadySeconds: {{ .Values.deployment.minReadySeconds | default 0 }}
   strategy: {}
   selector:
     matchLabels:
@@ -32,13 +32,13 @@ spec:
         {{- end }}
         redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
-      priorityClassName: {{ required (printf $requiredMsg "deployment.priorityClassName") .Values.deployment.priorityClassName | quote }}
+      priorityClassName: {{ .Values.deployment.priorityClassName| default "default" | quote }}
       {{- if .Values.serviceAccount }}
       {{- if .Values.serviceAccount.roleArn }}
       serviceAccountName: {{ .Values.serviceAccount.name | quote }}
       {{- end }}
       {{- end }}
-      restartPolicy: {{ required (printf $requiredMsg "deployment.restartPolicy") .Values.deployment.restartPolicy | quote }}
+      restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
       - name: {{ required (printf $requiredMsg "deployment.imagePullSecret") .Values.deployment.imagePullSecret| quote }}

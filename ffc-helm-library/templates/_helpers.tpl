@@ -18,7 +18,6 @@ app.kubernetes.io/component: {{ .Values.labels.component | default "service" | q
 app.kubernetes.io/part-of: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-environment: {{ required (printf $requiredMsg "environment") .Values.environment | quote }}
 {{- end -}}
 
 {{/*
