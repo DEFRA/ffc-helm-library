@@ -14,7 +14,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: {{ required (printf $requiredMsg "workstream") .Values.workstream }}-developer-1
+  name: {{ required (printf $requiredMsg "namespace") .Values.namespace }}-developer-1
 {{- end -}}
 {{- define "ffc-helm-library.role-binding" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.role-binding.tpl") -}}

@@ -19,7 +19,7 @@ spec:
             aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
             {{- end }}
         spec:
-          restartPolicy: {{ required (printf $requiredMsg "cronJob.restartPolicy") .Values.cronJob.restartPolicy | quote }}
+          restartPolicy: {{ .Values.cronJob.restartPolicy | default "Always" | quote }}
           securityContext:
             fsGroup: {{ .Values.cronJob.runAsUser | default 1000 }}
             runAsUser: {{ .Values.cronJob.runAsUser | default 1000 }}
