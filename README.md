@@ -283,6 +283,22 @@ serviceAccount:
   roleArn: <string>
 ```
 
+### Service account template
+
+* Template file: `_service-account.yaml`
+* Template name: `ffc-helm-library.service-account`
+
+A K8s `ServiceAccount` object.
+
+A basic usage of this object template would involve the creation of `templates/service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "ffc-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
+{{- define "ffc-microservice.service-account" -}}
+# Microservice specific configuration in here
+{{- end -}}
+```
+
 ### EKS service account template
 
 * Template file: `_eks-service-account.yaml`
