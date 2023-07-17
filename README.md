@@ -625,6 +625,51 @@ deployment:
   updateMode: <string>
 ```
 
+### Storage Class template
+
+* Template file: `_storage-class.yaml`
+* Template name: `helm-library.storage-class`
+
+A k8s `StorageClass`.  
+
+A basic usage of this object template would involve the creation of `templates/storage-class.yaml` in the parent Helm chart (e.g. `microservice`).
+
+```
+{{- include "ffc-helm-library.storage-class" (list . "microservice.storage-class") -}}
+{{- define "microservice.storage-class" -}}
+{{- end -}}
+```
+
+### Persistent Volume template
+
+* Template file: `_persistent-volume.yaml`
+* Template name: `helm-library.persistent-volume`
+
+A k8s `PersistentVolume`.  
+
+A basic usage of this object template would involve the creation of `templates/persistent-volume.yaml` in the parent Helm chart (e.g. `microservice`).
+
+```
+{{- include "ffc-helm-library.persistent-volume" (list . "microservice.persistent-volume") -}}
+{{- define "microservice.persistent-volume" -}}
+{{- end -}}
+```
+
+### Persistent Volume Claim template
+
+* Template file: `_persistent-volume-claim.yaml`
+* Template name: `helm-library.persistent-volume-claim`
+
+A k8s `PersistentVolumeClaim`.  
+
+A basic usage of this object template would involve the creation of `templates/persistent-volume-claim.yaml` in the parent Helm chart (e.g. `microservice`).
+
+```
+{{- include "ffc-helm-library.persistent-volume-claim" (list . "microservice.persistent-volume-claim") -}}
+{{- define "microservice.persistent-volume-claim" -}}
+{{- end -}}
+```
+
 ## Helper templates
 
 In addition to the K8s object templates described above, a number of helper templates are defined in `_helpers.tpl` that are both used within the library chart and available to use within a consuming parent chart.
