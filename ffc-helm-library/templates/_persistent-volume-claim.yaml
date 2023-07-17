@@ -1,4 +1,4 @@
-{{- define "ffc-helm-library.persistent-volume.tpl" -}}
+{{- define "ffc-helm-library.persistent-volume-claim.tpl" -}}
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -14,6 +14,6 @@ spec:
   storageClassName: {{ required (printf $requiredMsg "PersistentVolumeClaim.storageClassName") .Values.PersistentVolumeClaim.storageClassName | quote }}
   volumeName: {{ required (printf $requiredMsg "PersistentVolumeClaim.volumeName") .Values.PersistentVolumeClaim.volumeName | quote }}
 {{- end }}
-{{- define "ffc-helm-library.persistent-volume" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.persistent-volume.tpl") -}}
+{{- define "ffc-helm-library.persistent-volume-claim" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.persistent-volume-claim.tpl") -}}
 {{- end -}}
