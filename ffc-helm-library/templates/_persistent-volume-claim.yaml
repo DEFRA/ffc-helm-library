@@ -12,7 +12,6 @@ spec:
     requests:
       storage: {{ .Values.persistentVolumeClaim.size | quote }}
   storageClassName: {{ .Values.persistentVolumeClaim.storageClassName | default "" }}
-  volumeName: {{ required (printf $requiredMsg "persistentVolumeClaim.volumeName") .Values.persistentVolumeClaim.volumeName | quote }}
 {{- end }}
 {{- define "ffc-helm-library.persistent-volume-claim" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.persistent-volume-claim.tpl") -}}
