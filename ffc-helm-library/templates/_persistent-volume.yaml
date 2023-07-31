@@ -8,9 +8,10 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
-  capacity:
+  capacity:  
     storage: {{ .Values.persistentVolume.size | quote }}
   storageClassName: {{ required (printf $requiredMsg "persistentVolume.storageClassName") .Values.persistentVolume.storageClassName | quote }}
+  persistentVolumeReclaimPolicy: {{ .Values.persistentVolume.reclaimPolicy | default "Retain" }}
 {{- end }}
 {{- define "ffc-helm-library.persistent-volume" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.persistent-volume.tpl") -}}
