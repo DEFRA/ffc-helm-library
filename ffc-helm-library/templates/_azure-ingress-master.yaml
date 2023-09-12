@@ -1,12 +1,12 @@
-{{- define "ffc-helm-library.azure-ingress-master.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.azure-ingress-master.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{  required (printf $requiredMsg ".ingress.class") .Values.ingress.class | quote }}
     {{- if eq .Values.ingress.class "nginx" }}
@@ -29,6 +29,6 @@ spec:
   - http:
 {{- end }}
 {{- end }}
-{{- define "ffc-helm-library.azure-ingress-master" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress-master.tpl") -}}
+{{- define "adp-helm-library.azure-ingress-master" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.azure-ingress-master.tpl") -}}
 {{- end -}}

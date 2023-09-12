@@ -1,12 +1,12 @@
-{{- define "ffc-helm-library.postgres-service.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.postgres-service.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ required (printf $requiredMsg "postgresService.postgresHost") .Values.postgresService.postgresHost | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
 spec:
   type: ExternalName
   externalName: {{ required (printf $requiredMsg "postgresService.postgresExternalName") .Values.postgresService.postgresExternalName | quote }}
@@ -14,6 +14,6 @@ spec:
     - name: port
       port: {{ required (printf $requiredMsg "postgresService.postgresPort") .Values.postgresService.postgresPort }}
 {{- end -}}
-{{- define "ffc-helm-library.postgres-service" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.postgres-service.tpl") -}}
+{{- define "adp-helm-library.postgres-service" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.postgres-service.tpl") -}}
 {{- end -}}

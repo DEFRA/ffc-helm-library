@@ -23,7 +23,7 @@ description: A Helm chart to deploy a microservice to the FFC Kubernetes platfor
 name: ffc-microservice
 version: 1.0.0
 dependencies:
-- name: ffc-helm-library
+- name: adp-helm-library
   version: ^1.0.0
   repository: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
 ```
@@ -37,7 +37,7 @@ The FFC Helm library chart has been configured using the conventions described i
 The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the K8s object formateted as so:
 
 ```
-{{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
+{{- include "adp-helm-library.secret" (list . "ffc-microservice.secret") -}}
 {{- define "ffc-microservice.secret" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -47,7 +47,7 @@ This example would be for `template/secret.yaml` in the `ffc-microservice` Helm 
 
 ```
 {{- if .Values.pr }}
-{{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
+{{- include "adp-helm-library.secret" (list . "ffc-microservice.secret") -}}
 {{- end }}
 {{- define "ffc-microservice.secret" -}}
 # Microservice specific configuration in here
@@ -67,14 +67,14 @@ namespace: <string>
 ### Azure Identity template
 
 * Template file: `_azure-identity.yaml`
-* Template name: `ffc-helm-library.azure-identity`
+* Template name: `adp-helm-library.azure-identity`
 
 A K8s `AzureIdentity` object. Must be used in conjunction with the `AzureIdentityBinding` described below. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity`.
 
 A basic usage of this object template would involve the creation of `templates/azure-identity.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.azure-identity" (list . "ffc-microservice.azure-identity") -}}
+{{- include "adp-helm-library.azure-identity" (list . "ffc-microservice.azure-identity") -}}
 {{- define "ffc-microservice.azure-identity" -}}
 {{- end -}}
 ```
@@ -92,14 +92,14 @@ azureIdentity:
 ### Azure Identity Binding template
 
 * Template file: `_azure-identity-binding.yaml`
-* Template name: `ffc-helm-library.azure-identity-binding`
+* Template name: `adp-helm-library.azure-identity-binding`
 
 A K8s `AzureIdentityBinding` object. Must be used in conjunction with the `AzureIdentity` described above. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity-binding`.
 
 A basic usage of this object template would involve the creation of `templates/azure-identity-binding.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.azure-identity-binding" (list . "ffc-microservice.azure-identity-binding") -}}
+{{- include "adp-helm-library.azure-identity-binding" (list . "ffc-microservice.azure-identity-binding") -}}
 {{- define "ffc-microservice.azure-identity-binding" -}}
 {{- end -}}
 ```
@@ -111,14 +111,14 @@ Only the globally required values [listed above](#all-template-required-values).
 ### Cluster IP service template
 
 * Template file: `_cluster-ip-service.yaml`
-* Template name: `ffc-helm-library.cluster-ip-service`
+* Template name: `adp-helm-library.cluster-ip-service`
 
 A K8s `Service` object of type `ClusterIP`.
 
 A basic usage of this object template would involve the creation of `templates/cluster-ip-service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.cluster-ip-service" (list . "ffc-microservice.service") -}}
+{{- include "adp-helm-library.cluster-ip-service" (list . "ffc-microservice.service") -}}
 {{- define "ffc-microservice.service" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -135,7 +135,7 @@ container:
 ### Container template
 
 * Template file: `_container.yaml`
-* Template name: `ffc-helm-library.container`
+* Template name: `adp-helm-library.container`
 
 A template for the container definition to be used within a K8s `Deployment` object.
 
@@ -180,14 +180,14 @@ container:
 ### Container ConfigMap template
 
 * Template file: `_containter-config-map.yaml`
-* Template name: `ffc-helm-library.containter-config-map`
+* Template name: `adp-helm-library.containter-config-map`
 
 A K8s `ConfigMap` object object to host non-sensitive container configuration data.
 
 A basic usage of this object template would involve the creation of `templates/containter-config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
 
 ```
-{{- include "ffc-helm-library.containter-config-map" (list . "ffc-microservice.containter-config-map") -}}
+{{- include "adp-helm-library.containter-config-map" (list . "ffc-microservice.containter-config-map") -}}
 {{- define "ffc-microservice.containter-config-map" -}}
 data:
   <key1>: <value1>
@@ -207,14 +207,14 @@ containerConfigMap:
 ### Container Secret template
 
 * Template file: `_containter-secret.yaml`
-* Template name: `ffc-helm-library.containter-secret`
+* Template name: `adp-helm-library.containter-secret`
 
 A K8s `Secret` object to host sensitive data such as a password or token in a container.
 
 A basic usage of this object template would involve the creation of `templates/containter-secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data :
 
 ```
-{{- include "ffc-helm-library.containter-secret" (list . "ffc-microservice.containter-secret") -}}
+{{- include "adp-helm-library.containter-secret" (list . "ffc-microservice.containter-secret") -}}
 {{- define "ffc-microservice.containter-secret" -}}
 data:
   <key1>: <value1>
@@ -235,20 +235,20 @@ containerSecret:
 ### Deployment template
 
 * Template file: `_deployment.yaml`
-* Template name: `ffc-helm-library.deployment`
+* Template name: `adp-helm-library.deployment`
 
 A K8s `Deployment` object.
 
 A basic usage of this object template would involve the creation of `templates/deployment.yaml` in the parent Helm chart (e.g. `ffc-microservice`) that includes the template defined in `_container.yaml` template:
 
 ```
-{{- include "ffc-helm-library.deployment" (list . "ffc-microservice.deployment") -}}
+{{- include "adp-helm-library.deployment" (list . "ffc-microservice.deployment") -}}
 {{- define "ffc-microservice.deployment" -}}
 spec:
   template:
     spec:
       containers:
-      - {{ include "ffc-helm-library.container" (list . "ffc-microservice.container") }}
+      - {{ include "adp-helm-library.container" (list . "ffc-microservice.container") }}
 {{- end -}}
 
 ```
@@ -286,14 +286,14 @@ serviceAccount:
 ### Service account template
 
 * Template file: `_service-account.yaml`
-* Template name: `ffc-helm-library.service-account`
+* Template name: `adp-helm-library.service-account`
 
 A K8s `ServiceAccount` object.
 
 A basic usage of this object template would involve the creation of `templates/service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
+{{- include "adp-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
 {{- define "ffc-microservice.service-account" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -302,14 +302,14 @@ A basic usage of this object template would involve the creation of `templates/s
 ### EKS service account template
 
 * Template file: `_eks-service-account.yaml`
-* Template name: `ffc-helm-library.eks-service-account`
+* Template name: `adp-helm-library.eks-service-account`
 
 A K8s `ServiceAccount` object configured for use on AWS's managed K8s service EKS.
 
 A basic usage of this object template would involve the creation of `templates/eks-service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.eks-service-account" (list . "ffc-microservice.eks-service-account") -}}
+{{- include "adp-helm-library.eks-service-account" (list . "ffc-microservice.eks-service-account") -}}
 {{- define "ffc-microservice.eks-service-account" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -328,14 +328,14 @@ serviceAccount:
 ### Ingress template
 
 * Template file: `_ingress.yaml`
-* Template name: `ffc-helm-library.ingress`
+* Template name: `adp-helm-library.ingress`
 
 A K8s `Ingress` object that can be configured for Nginx or AWS ALB (Amazon Load Balancer).
 
 A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.ingress" (list . "ffc-microservice.ingress") -}}
+{{- include "adp-helm-library.ingress" (list . "ffc-microservice.ingress") -}}
 {{- define "ffc-microservice.ingress" -}}
 metadata:
   annotations:
@@ -345,7 +345,7 @@ metadata:
 A basic ALB `Ingress` object would involve the creation of `templates/ingress-alb.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.ingress" (list . "ffc-microservice.ingress-alb") -}}
+{{- include "adp-helm-library.ingress" (list . "ffc-microservice.ingress-alb") -}}
 {{- define "ffc-microservice.ingress-alb" -}}
 metadata:
   annotations:
@@ -379,14 +379,14 @@ ingress:
 ### Azure Ingress template
 
 * Template file: `_azure-ingress.yaml`
-* Template name: `ffc-helm-library.azure-ingress`
+* Template name: `adp-helm-library.azure-ingress`
 
 A K8s `Ingress` object that can be configured for Nginx for use in Azure.
 
 A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.azure-ingress" (list . "ffc-microservice.ingress") -}}
+{{- include "adp-helm-library.azure-ingress" (list . "ffc-microservice.ingress") -}}
 {{- define "ffc-microservice.ingress" -}}
 metadata:
   annotations:
@@ -427,7 +427,7 @@ and should have the value `master` or `minion`.
 ### Azure Ingress template (master)
 
 * Template file: `_azure-ingress-master.yaml`
-* Template name: `ffc-helm-library.azure-ingress-master`
+* Template name: `adp-helm-library.azure-ingress-master`
 
 A K8s `Ingress` object that can be configured for Nginx for use in Azure with a `master` [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types).
 
@@ -436,7 +436,7 @@ Although the `Azure Ingress template` can also be used to create `master` mergea
 A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.azure-ingress-master" (list . "ffc-microservice.ingress") -}}
+{{- include "adp-helm-library.azure-ingress-master" (list . "ffc-microservice.ingress") -}}
 {{- define "ffc-microservice.ingress" -}}
 metadata:
   annotations:
@@ -468,14 +468,14 @@ ingress:
 ### Postgres service template
 
 * Template file: `_postgres-service.yaml`
-* Template name: `ffc-helm-library.postgres-service`
+* Template name: `adp-helm-library.postgres-service`
 
 A K8s `Service` object of type `ExternalName` configured to refer to a Postgres database hosted on a server outside of the K8s cluster such as AWS RDS.
 
 A basic usage of this object template would involve the creation of `templates/postgres-service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.postgres-service" (list . "ffc-microservice.postgres-service") -}}
+{{- include "adp-helm-library.postgres-service" (list . "ffc-microservice.postgres-service") -}}
 {{- define "ffc-microservice.postgres-service" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -495,14 +495,14 @@ postgresService:
 ### RBAC role binding template
 
 * Template file: `_role-binding.yaml`
-* Template name: `ffc-helm-library.role-binding`
+* Template name: `adp-helm-library.role-binding`
 
 A K8s `RoleBinding` object used to bind a role to a user as part of RBAC configuration in the K8s cluster.
 
 A basic usage of this object template would involve the creation of `templates/role-binding.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.role-binding" (list . "ffc-microservice.role-binding") -}}
+{{- include "adp-helm-library.role-binding" (list . "ffc-microservice.role-binding") -}}
 {{- define "ffc-microservice.role-binding" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -511,14 +511,14 @@ A basic usage of this object template would involve the creation of `templates/r
 ### Secret template
 
 * Template file: `_secret.yaml`
-* Template name: `ffc-helm-library.secret`
+* Template name: `adp-helm-library.secret`
 
 A K8s `Secret` object to host sensitive data such as a password or token.
 
 A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data :
 
 ```
-{{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
+{{- include "adp-helm-library.secret" (list . "ffc-microservice.secret") -}}
 {{- define "ffc-microservice.secret" -}}
 data:
   <key1>: <value1>
@@ -539,14 +539,14 @@ secret:
 ### Service template
 
 * Template file: `_service.yaml`
-* Template name: `ffc-helm-library.service`
+* Template name: `adp-helm-library.service`
 
 A generic K8s `Service` object requiring a service type to be set.
 
 A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```
-{{- include "ffc-helm-library.service" (list . "ffc-microservice.service") -}}
+{{- include "adp-helm-library.service" (list . "ffc-microservice.service") -}}
 {{- define "ffc-microservice.service" -}}
 # Microservice specific configuration in here
 {{- end -}}
@@ -571,7 +571,7 @@ A k8s `HorizontalPodAutoscaler`.
 A basic usage of this object template would involve the creation of `templates/horizontal-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
 
 ```
-{{- include "ffc-helm-library.horizontal-pod-autoscaler" (list . "microservice.horizontal-pod-autoscaler") -}}
+{{- include "adp-helm-library.horizontal-pod-autoscaler" (list . "microservice.horizontal-pod-autoscaler") -}}
 {{- define "microservice.horizontal-pod-autoscaler" -}}
 spec:
   metrics:
@@ -611,7 +611,7 @@ A k8s `VerticalPodAutoscaler`.
 A basic usage of this object template would involve the creation of `templates/vertical-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
 
 ```
-{{- include "ffc-helm-library.vertical-pod-autoscaler" (list . "microservice.vertical-pod-autoscaler") -}}
+{{- include "adp-helm-library.vertical-pod-autoscaler" (list . "microservice.vertical-pod-autoscaler") -}}
 {{- define "microservice.vertical-pod-autoscaler" -}}
 {{- end -}}
 ```
@@ -635,7 +635,7 @@ A k8s `StorageClass`.
 A basic usage of this object template would involve the creation of `templates/storage-class.yaml` in the parent Helm chart (e.g. `microservice`).
 
 ```
-{{- include "ffc-helm-library.storage-class" (list . "microservice.storage-class") -}}
+{{- include "adp-helm-library.storage-class" (list . "microservice.storage-class") -}}
 {{- define "microservice.storage-class" -}}
 {{- end -}}
 ```
@@ -650,7 +650,7 @@ A k8s `PersistentVolume`.
 A basic usage of this object template would involve the creation of `templates/persistent-volume.yaml` in the parent Helm chart (e.g. `microservice`).
 
 ```
-{{- include "ffc-helm-library.persistent-volume" (list . "microservice.persistent-volume") -}}
+{{- include "adp-helm-library.persistent-volume" (list . "microservice.persistent-volume") -}}
 {{- define "microservice.persistent-volume" -}}
 {{- end -}}
 ```
@@ -665,7 +665,7 @@ A k8s `PersistentVolumeClaim`.
 A basic usage of this object template would involve the creation of `templates/persistent-volume-claim.yaml` in the parent Helm chart (e.g. `microservice`).
 
 ```
-{{- include "ffc-helm-library.persistent-volume-claim" (list . "microservice.persistent-volume-claim") -}}
+{{- include "adp-helm-library.persistent-volume-claim" (list . "microservice.persistent-volume-claim") -}}
 {{- define "microservice.persistent-volume-claim" -}}
 {{- end -}}
 ```
@@ -676,29 +676,29 @@ In addition to the K8s object templates described above, a number of helper temp
 
 ### Default check required message
 
-* Template name: `ffc-helm-library.default-check-required-msg`
-* Usage: `{{- include "ffc-helm-library.default-check-required-msg" . }}`
+* Template name: `adp-helm-library.default-check-required-msg`
+* Usage: `{{- include "adp-helm-library.default-check-required-msg" . }}`
 
 A template defining the default message to print when checking for a required value within the library. This is not designed to be used outside of the library.
 
 ### Labels
 
-* Template name: `ffc-helm-library.labels`
-* Usage: `{{- include "ffc-helm-library.labels" . }}`
+* Template name: `adp-helm-library.labels`
+* Usage: `{{- include "adp-helm-library.labels" . }}`
 
 Common labels to apply to `metadata` of all K8s objects on the FFC K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Selector labels
 
-* Template name: `ffc-helm-library.selector-labels`
-* Usage: `{{- include "ffc-helm-library.selector-labels" . }}`
+* Template name: `adp-helm-library.selector-labels`
+* Usage: `{{- include "adp-helm-library.selector-labels" . }}`
 
 Common selector labels that can be applied where necessary to K8s objects on the FFC K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Http GET probe
 
-* Template name: `ffc-helm-library.http-get-probe`
-* Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
+* Template name: `adp-helm-library.http-get-probe`
+* Usage: `{{- include "adp-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
 
 Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). 
 
@@ -721,8 +721,8 @@ timeoutSeconds: <integer>
 
 ### Exec probe
 
-* Template name: `ffc-helm-library.exec-probe`
-* Usage: `{{- include "ffc-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
+* Template name: `adp-helm-library.exec-probe`
+* Usage: `{{- include "adp-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
 
 Template for configuration of an "exec" probe that runs a local script, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)).
 

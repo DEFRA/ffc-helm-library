@@ -1,19 +1,19 @@
-{{- define "ffc-helm-library.deployment.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.deployment.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.deployment.replicas | default 1 }}
   minReadySeconds: {{ .Values.deployment.minReadySeconds | default 0 }}
   strategy: {}
   selector:
     matchLabels:
-      {{- include "ffc-helm-library.selector-labels" . | nindent 6 }}
+      {{- include "adp-helm-library.selector-labels" . | nindent 6 }}
   template:
     metadata:
       namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
@@ -21,7 +21,7 @@ spec:
         {{- if .Values.azureIdentity }}
         aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
         {{- end }}
-        {{- include "ffc-helm-library.labels" . | nindent 8 }}
+        {{- include "adp-helm-library.labels" . | nindent 8 }}
       annotations:
         {{- if .Values.deployment.useLinkerd }}
         linkerd.io/inject: enabled
@@ -52,10 +52,10 @@ spec:
         emptyDir: {}
       containers:
       -
-{{ include "ffc-helm-library.container.tpl" . | indent 8 }}
+{{ include "adp-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
-{{- define "ffc-helm-library.deployment" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
+{{- define "adp-helm-library.deployment" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.deployment.tpl") -}}
 {{- end -}}
 
 

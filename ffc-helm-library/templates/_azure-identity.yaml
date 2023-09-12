@@ -1,11 +1,11 @@
-{{- define "ffc-helm-library.azure-identity.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.azure-identity.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: "aadpodidentity.k8s.io/v1"
 kind: AzureIdentity
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name }}-identity
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
-  labels: {{- include "ffc-helm-library.labels" . | nindent 4 }}
+  labels: {{- include "adp-helm-library.labels" . | nindent 4 }}
   annotations:
     aadpodidentity.k8s.io/Behavior: namespaced
 spec:
@@ -13,6 +13,6 @@ spec:
   resourceID: {{ required (printf $requiredMsg "azureIdentity.resourceID") .Values.azureIdentity.resourceID | quote }}
   clientID: {{ required (printf $requiredMsg "azureIdentity.clientID") .Values.azureIdentity.clientID | quote }}
 {{- end -}}
-{{- define "ffc-helm-library.azure-identity" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-identity.tpl") -}}
+{{- define "adp-helm-library.azure-identity" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.azure-identity.tpl") -}}
 {{- end -}}
