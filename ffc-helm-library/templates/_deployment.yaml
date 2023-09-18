@@ -18,8 +18,8 @@ spec:
     metadata:
       namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
       labels:
-        {{- if .Values.azureIdentity }}
-        aadpodidbinding: {{ required (printf $requiredMsg "name") .Values.name }}-identity-selector
+        {{- if .Values.aadWorkloadIdentity }}
+        azure.workload.identity/use: "true"
         {{- end }}
         {{- include "adp-helm-library.labels" . | nindent 8 }}
       annotations:
