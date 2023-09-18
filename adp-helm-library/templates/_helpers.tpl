@@ -1,15 +1,15 @@
 {{/*
 A default message string to be used when checking for a required value
 */}}
-{{- define "ffc-helm-library.default-check-required-msg" -}}
-{{- "No value found for '%s' in ffc-helm-library template" -}}
+{{- define "adp-helm-library.default-check-required-msg" -}}
+{{- "No value found for '%s' in adp-helm-library template" -}}
 {{- end -}}
 
 {{/*
 Common labels
 */}}
-{{- define "ffc-helm-library.labels" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.labels" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 app: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
 app.kubernetes.io/name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name }}
@@ -23,8 +23,8 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{/*
 Selector labels
 */}}
-{{- define "ffc-helm-library.selector-labels" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.selector-labels" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 app.kubernetes.io/name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
@@ -32,9 +32,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Settings for an http GET probe to be used for readiness or liveness
 */}}
-{{- define "ffc-helm-library.http-get-probe" -}}
+{{- define "adp-helm-library.http-get-probe" -}}
 {{- $settings := (index . 1) -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 httpGet:
   path: {{ required (printf $requiredMsg "probe.path") $settings.path | quote }}
   port: {{ required (printf $requiredMsg "probe.port") $settings.port }}
@@ -47,9 +47,9 @@ timeoutSeconds: {{ $settings.timeoutSeconds | default 1 }}
 {{/*
 Settings for a script execution probe to be used for readiness or liveness
 */}}
-{{- define "ffc-helm-library.exec-probe" -}}
+{{- define "adp-helm-library.exec-probe" -}}
 {{- $settings := (index . 1) -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 exec:
   command:
   - "sh"

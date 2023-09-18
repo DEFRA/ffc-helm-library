@@ -1,0 +1,14 @@
+{{- define "adp-helm-library.container-config-map.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ required (printf $requiredMsg "containerConfigMap.name") .Values.containerConfigMap.name | quote }}
+  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  labels:
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
+data: {}
+{{- end }}
+{{- define "adp-helm-library.container-config-map" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.container-config-map.tpl") -}}
+{{- end -}}

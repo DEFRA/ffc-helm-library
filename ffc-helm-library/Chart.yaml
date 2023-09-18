@@ -1,5 +1,0 @@
-apiVersion: v2
-name: ffc-helm-library
-description: A Helm library chart that captures general configuration for the FFC Kubernetes platform
-type: library
-version: 4.0.0

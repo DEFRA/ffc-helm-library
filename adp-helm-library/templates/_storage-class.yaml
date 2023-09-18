@@ -1,17 +1,17 @@
-{{- define "ffc-helm-library.storage-class.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.storage-class.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: {{ required (printf $requiredMsg "storageClass.name") .Values.storageClass.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace  | quote }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
 provisioner: {{ .Values.storageClass.provisioner | default "blob.csi.azure.com" | quote }}
 parameters:
   protocol: {{ .Values.storageClass.protocol | default "nfs" | quote }}
 volumeBindingMode: {{ .Values.storageClass.volumeBindingMode | default "Immediate" | quote }}
 {{- end }}
-{{- define "ffc-helm-library.storage-class" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.storage-class.tpl") -}}
+{{- define "adp-helm-library.storage-class" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.storage-class.tpl") -}}
 {{- end -}}
