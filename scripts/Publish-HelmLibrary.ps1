@@ -9,9 +9,6 @@ Publish Helm library chart to github repo 'Defra/adp-helm-repository' and update
 .PARAMETER HelmLibraryPath
 Helm library folder root path. requires to package helm library into .tgz package.
 
-.PARAMETER ChartVersion
-Current Helm library ChartVersion.
-
 .PARAMETER HelmChartRepoPublic
 Helm chart publich url. Requires to index.yaml file.
 #>
@@ -19,8 +16,6 @@ Helm chart publich url. Requires to index.yaml file.
 param(
     [Parameter(Mandatory)] 
     [string]$HelmLibraryPath,
-    [Parameter(Mandatory)] 
-    [string]$ChartVersion,
     [Parameter(Mandatory)] 
     [string]$HelmChartRepoPublic,
     [Parameter()]
@@ -46,7 +41,6 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:HelmLibraryPath=$HelmLibraryPath"
-Write-Debug "${functionName}:ChartVersion=$ChartVersion"
 Write-Debug "${functionName}:HelmChartRepoPublic=$HelmChartRepoPublic"
 Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
 
@@ -56,12 +50,24 @@ try {
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
     Import-Module $moduleDir.FullName -Force
 
+    if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+        Write-Host "powershell-yaml Module does not exists. Installing now.."
+        Install-Module powershell-yaml -Force
+        Write-Host "powershell-yaml Installed Successfully."
+    } 
+    else {
+        Write-Host "powershell-yaml Module exist"
+    }
+
     [string]$helmPackageCommand = "helm package $HelmLibraryPath"
     Write-Host $helmPackageCommand
     Invoke-CommandLine -Command $helmPackageCommand | Out-Null
+    
+    [version]$currentChartVersion = (Get-Content $HelmLibraryPath/Chart.yaml | ConvertFrom-Yaml).version
+    Write-host "currentVersion: $currentChartVersion"
 
     [string]$packageName = Split-Path $HelmLibraryPath -Leaf
-    [string]$packageNameWithVersion = "$packageName-$ChartVersion.tgz"
+    [string]$packageNameWithVersion = "$packageName-$currentChartVersion.tgz"
 
     Move-Item -Path $packageNameWithVersion -Destination ../ADPHelmRepository
 
@@ -93,7 +99,7 @@ try {
     Write-Host $gitStagingCommand
     Invoke-CommandLine -Command $gitStagingCommand | Out-Null
 
-    [string]$commitMessage = "Add new version $ChartVersion"
+    [string]$commitMessage = "Add new version $currentChartVersion"
     [string]$author = "ADO Devops <ado@noemail.com>"
     [string]$gitCommitCommand = "git commit -am '$commitMessage' --author='$author'"
     Write-Host $gitCommitCommand

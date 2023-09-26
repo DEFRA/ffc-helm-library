@@ -5,7 +5,7 @@ Verify version in chart.yaml is changed and incremented.
 .DESCRIPTION
 Compares version in chart.yaml file with the main version and working branch version.
 The script will throw an error if the version has not been incremented in working branch
-otherwise it will print a message stating the version increment and stores in variable 'ChartCurrentVersion'.
+otherwise it will print a message stating the version increment.
 
 .PARAMETER HelmLibraryPath
 Helm library folder root path.
@@ -71,9 +71,8 @@ try {
     Write-Debug "previousVersion: $previousVersion"
 
     if($currentVersion -gt $previousVersion){
+        
         Write-Host "Version increment valid '$previousVersion' -> '$currentVersion'."
-
-        Write-Host "##vso[task.setvariable variable=ChartCurrentVersion]$currentVersion" 
 
         $exitCode = 0
     }
