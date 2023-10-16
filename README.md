@@ -160,6 +160,48 @@ containerConfigMap:
   name: <string>
 ```
 
+### Azure Application Configuration Service ConfigMap template
+
+* Template file: `_azure-config-service-map.yaml`
+* Template name: `adp-helm-library.azure-config-service-map`
+
+A K8s `ConfigMap` object object to host non-sensitive container configuration data read from the Azure Application Configuration Service.
+
+A basic usage of this object template would involve the creation of `templates/azure-config-service-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```
+{{- include "adp-helm-library.azure-config-service-map" . -}}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` in addition to the globally required values [listed above](#all-template-required-values):
+
+```
+containerConfigMap:
+  name: <string>
+  configServiceUrl: <string>
+  keyValues:
+    labelFilter: <string>
+```
+
+#### Optional values
+
+The following value can optionally be set in the parent chart's `values.yaml`:
+
+```
+containerConfigMap:
+  keyValues:
+    keyVaults:
+      secretName: <string> <required if keyVault references are to be read from Config Service>
+      refresh: <optional>
+        interval: <duration> <e.g. 5m> <required>
+    refresh:
+      interval: <duration> <e.g. 5m> <optional, if not specified along with the `monitorKey` default will be 30 seconds>
+      monitorKey: <string>
+      monitorLabel: <string>
+```
+
 ### Container Secret template
 
 * Template file: `_containter-secret.yaml`
