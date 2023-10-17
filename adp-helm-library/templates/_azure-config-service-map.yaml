@@ -15,8 +15,10 @@ spec:
     workloadIdentity:
       {{- $configMapName := printf "%s-aso-mi-identity-settings" .Values.namespace }}
       {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace $configMapName) }}
-      {{- $clientId := get $configmap.data "clientId" }}      
+      {{- if $configmap }}
+      {{- $clientId := get $configmap.data "clientId" }}
       managedIdentityClientId: {{ $clientId }}
+      {{- end }}
   keyValues:
     selectors:
       - keyFilter: {{ .Values.containerConfigMap.keyValues.keyFilter | default "*" | quote }}
@@ -27,7 +29,10 @@ spec:
         secretName: {{ required (printf $requiredMsg "containerConfigMap.keyValues.keyVaults.secretName") .Values.containerConfigMap.keyValues.keyVaults.secretName | quote }}
       auth:
         workloadIdentity:
+          {{- if $configmap }}
+          {{- $clientId := get $configmap.data "clientId" }}
           managedIdentityClientId: {{ $clientId }}
+          {{- end }}
       {{- if .Values.containerConfigMap.keyValues.keyVaults.refresh }}
       refresh:
         interval: {{ required (printf $requiredMsg "containerConfigMap.keyValues.keyVaults.refresh.interval") .Values.containerConfigMap.keyValues.keyVaults.refresh.interval }}
