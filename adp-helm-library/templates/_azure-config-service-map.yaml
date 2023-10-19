@@ -13,7 +13,10 @@ spec:
     configMapName: {{ required (printf $requiredMsg "containerConfigMap.name") .Values.containerConfigMap.name | quote }}
   auth:
     workloadIdentity:
-      {{- $configMapName := printf "%s-aso-mi-identity-settings" .Values.namespace }}
+      {{- $managedIdPrefix := (required (printf $requiredMsg "managedIdPrefix") .Values.managedIdPrefix) | lower }}
+      {{- $managedIdSuffix := (required (printf $requiredMsg "userAssignedIdentity.managedIdName") .Values.userAssignedIdentity.managedIdName) | lower }}
+      {{- $managedIdName :=  printf "%s-%s" $managedIdPrefix $managedIdSuffix }}
+      {{- $configMapName := printf "%s-mi-identity-settings" $managedIdName }}
       {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace $configMapName) }}
       {{- if $configmap }}
       {{- $clientId := get $configmap.data "clientId" }}
