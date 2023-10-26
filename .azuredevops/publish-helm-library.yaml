@@ -20,7 +20,7 @@ resources:
       name: DEFRA/adp-pipeline-common
       endpoint: DEFRA
       type: github
-      ref: gg/temp
+      ref: main
 
 extends:
   template: /pipelines/common-helm-library-git-publish.yaml@DEFRA-ADPPipelineCommon 
