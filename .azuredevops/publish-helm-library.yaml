@@ -14,58 +14,16 @@ pr:
 pool:
   vmImage: windows-latest
 
-variables:
-  - name: HelmChartRepoPublic
-    value: "https://raw.githubusercontent.com/defra/adp-helm-repository/main/" 
-
 resources:
   repositories:
-    - repository: ADPHelmRepository
-      name: defra/adp-helm-repository
+    - repository: DEFRA-ADPPipelineCommon
+      name: DEFRA/adp-pipeline-common
       endpoint: DEFRA
       type: github
-      ref: main
+      ref: gg/temp
 
-steps:
-  - checkout: self
-    persistCredentials: true
-    path: ADPHelmLibrary
-
-  - checkout: ADPHelmRepository
-    persistCredentials: true
-    path: ADPHelmRepository  
-
-  - powershell: |
-      $lintPath = "$(Agent.BuildDirectory)\ADPHelmLibrary\adp-helm-library"
-      Write-Host 'Helm lint: Path = ' $lintPath
-      Helm lint $lintPath
-      if ($LASTEXITCODE -ne 0) {
-        throw "Non zero exit code: $LASTEXITCODE"
-      }
-      Write-Host 'Helm lint: End'
-    displayName: 'Helm lint'   
-
-  - task: PowerShell@2
-    displayName: 'Check Chart version Incremented'
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
-    inputs:
-      pwsh: true
-      azurePowerShellVersion: latestVersion
-      targetType: 'filePath'
-      filePath: $(Agent.BuildDirectory)\ADPHelmLibrary\scripts\Verify-ChartVersion.ps1
-      arguments: >
-        -HelmLibraryPath "$(Agent.BuildDirectory)\ADPHelmLibrary\adp-helm-library"
-      workingDirectory: $(Agent.BuildDirectory)\ADPHelmLibrary  
-
-  - task: PowerShell@2
-    displayName: 'Publish Helm Chart to Helm Repositiry(Github)'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    inputs:
-      pwsh: true
-      azurePowerShellVersion: latestVersion
-      targetType: 'filePath'
-      filePath: $(Agent.BuildDirectory)\ADPHelmLibrary\scripts\Publish-HelmLibrary.ps1
-      arguments: >
-        -HelmLibraryPath "$(Agent.BuildDirectory)\ADPHelmLibrary\adp-helm-library"
-        -HelmChartRepoPublic $(HelmChartRepoPublic)
-      workingDirectory: $(Agent.BuildDirectory)\ADPHelmLibrary
+extends:
+  template: /pipelines/common-helm-library-git-publish.yaml@DEFRA-ADPPipelineCommon 
+  parameters:
+    helmLibraryName: 'adp-helm-library'
+    chartRepoPublicUrl: 'https://raw.githubusercontent.com/defra/adp-helm-repository/main/adp-helm-library/'
