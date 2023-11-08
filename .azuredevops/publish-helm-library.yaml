@@ -1,5 +1,11 @@
 name: $(BuildID)
 
+parameters:
+- name: publishFromFeature
+  displayName: Publish from feature branch
+  type: boolean
+  default: false
+
 trigger:
   batch: true
   branches:
@@ -27,3 +33,4 @@ extends:
   parameters:
     helmLibraryName: 'adp-helm-library'
     chartRepoPublicUrl: 'https://raw.githubusercontent.com/defra/adp-helm-repository/main/adp-helm-library/'
+    publishFromFeature: ${{ parameters.publishFromFeature }}
