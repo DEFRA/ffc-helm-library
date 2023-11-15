@@ -3,14 +3,10 @@
 name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
 image: {{ required (printf $requiredMsg "image") .Values.image | quote }}
 envFrom:
-{{- if .Values.containerConfigMap }}
 - configMapRef:
-    name: {{ .Values.containerConfigMap.name }}
-{{- end }}
-{{- if .Values.containerSecret }}
+    name: {{ printf "%s-config" .Values.name | quote }}
 - secretRef:
-    name: {{ .Values.containerSecret.name }}
-{{- end }}
+    name: {{ printf "%s-secret" .Values.name | quote }}
 {{- if .Values.container.command }}
 command:
   {{- toYaml .Values.container.command | nindent 12 }}

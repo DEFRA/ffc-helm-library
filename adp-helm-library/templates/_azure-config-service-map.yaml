@@ -3,54 +3,56 @@
 apiVersion: azconfig.io/v1beta1
 kind: AzureAppConfigurationProvider
 metadata:
-  name: {{ required (printf $requiredMsg "containerConfigMap.name") .Values.containerConfigMap.name | quote }}
+  name: {{ required (printf $requiredMsg "name") (printf "%s-config-map" .Values.name) | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
     {{- include "adp-helm-library.labels" . | nindent 4 }}
 spec:
-  endpoint: {{ required (printf $requiredMsg "containerConfigMap.configServiceUrl") .Values.containerConfigMap.configServiceUrl }}
+  {{- if .Values.containerConfigMap }}
+  endpoint: {{ printf "https://%s.azconfig.io" .Values.containerConfigMap.configServiceName }}
+  {{- else}}
+  endpoint: ""
+  {{- end }}
   target:
-    configMapName: {{ required (printf $requiredMsg "containerConfigMap.name") .Values.containerConfigMap.name | quote }}
+    configMapName: {{ printf "%s-config" .Values.name | quote }}
+  {{- if .Values.containerConfigMap }}
   auth:
     workloadIdentity:
-      {{- $managedIdPrefix := (required (printf $requiredMsg "managedIdPrefix") .Values.managedIdPrefix) | lower }}
-      {{- $managedIdSuffix := (required (printf $requiredMsg "userAssignedIdentity.managedIdName") .Values.userAssignedIdentity.managedIdName) | lower }}
-      {{- $managedIdName :=  printf "%s-%s" $managedIdPrefix $managedIdSuffix }}
-      {{- $configMapName := printf "%s-mi-identity-settings" $managedIdName }}
-      {{- $configmap := (lookup "v1" "ConfigMap" .Values.namespace $configMapName) }}
-      {{- if $configmap }}
-      {{- $clientId := get $configmap.data "clientId" }}
-      managedIdentityClientId: {{ $clientId }}
-      {{ else }}
-      managedIdentityClientId: ''
-      {{- end }}
+      managedIdentityClientId: {{ .Values.containerConfigMap.configServiceMIClientId }}
+  {{- end }}
   keyValues:
     selectors:
-      - keyFilter: {{ .Values.containerConfigMap.keyValues.keyFilter | default "*" | quote }}
-        labelFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.labelFilter") .Values.containerConfigMap.keyValues.labelFilter | quote }}
-    {{- if .Values.containerConfigMap.keyValues.keyVaults }}
+      - keyFilter: "*"
+        labelFilter: {{ .Values.name | quote }}
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.selector }}
+      {{- range $selector := $.Values.containerConfigMap.keyValues.selector }}
+      - keyFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.selector.keyFilter") $selector.keyFilter | quote }}
+        labelFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.selector.labelFilter") $selector.labelFilter | quote }}
+      {{- end }}
+      {{- end }}
     keyVaults:
       target:
-        secretName: {{ required (printf $requiredMsg "containerConfigMap.keyValues.keyVaults.secretName") .Values.containerConfigMap.keyValues.keyVaults.secretName | quote }}
+        secretName: {{ printf "%s-secret" .Values.name | quote }}
+      {{- if .Values.containerConfigMap }}
       auth:
         workloadIdentity:
-          {{- if $configmap }}
-          {{- $clientId := get $configmap.data "clientId" }}
-          managedIdentityClientId: {{ $clientId }}
-          {{ else }}
-          managedIdentityClientId: ''
-          {{- end }}
-      {{- if .Values.containerConfigMap.keyValues.keyVaults.refresh }}
-      refresh:
-        interval: {{ required (printf $requiredMsg "containerConfigMap.keyValues.keyVaults.refresh.interval") .Values.containerConfigMap.keyValues.keyVaults.refresh.interval }}
+          managedIdentityClientId: {{ .Values.containerConfigMap.serviceMIClientId }}
       {{- end }}
-    {{- end }}
-    {{- if .Values.containerConfigMap.keyValues.refresh }}
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.keyVaults .Values.containerConfigMap.keyValues.keyVaults.refresh }}
+      refresh:
+        interval: {{ .Values.containerConfigMap.keyValues.keyVaults.refresh.interval }}
+      {{- else}}
+      refresh:
+        interval: "5m"
+      {{- end }}
     refresh:
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.refresh }}
       interval: {{ .Values.containerConfigMap.keyValues.refresh.interval }}
+      {{- else}}
+      interval: "1m"
+      {{- end}}
       monitoring:
         keyValues:
-          - key: {{ required (printf $requiredMsg "containerConfigMap.keyValues.refresh.monitorKey") .Values.containerConfigMap.keyValues.refresh.monitorKey }}
-            label: {{ required (printf $requiredMsg "containerConfigMap.keyValues.refresh.monitorLabel") .Values.containerConfigMap.keyValues.refresh.monitorLabel }}
-    {{- end }}
+          - key: "Sentinel"
+            label: {{ .Values.name }}
 {{- end }}
