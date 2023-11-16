@@ -25,7 +25,7 @@ spec:
       - keyFilter: "*"
         labelFilter: {{ .Values.name | quote }}
       - keyFilter: "*"
-        labelFilter: "Shared"
+        labelFilter: "shared"
       {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.selector }}
       {{- range $selector := $.Values.containerConfigMap.keyValues.selector }}
       - keyFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.selector.keyFilter") $selector.keyFilter | quote }}
