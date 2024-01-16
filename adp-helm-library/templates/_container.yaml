@@ -20,12 +20,7 @@ securityContext:
   readOnlyRootFilesystem: {{ .Values.container.readOnlyRootFilesystem | default true }}
   allowPrivilegeEscalation: {{ .Values.container.allowPrivilegeEscalation | default false }}
 resources:
-  requests:
-    memory: {{ required (printf $requiredMsg "container.requestMemory") .Values.container.requestMemory | quote }}
-    cpu: {{ required (printf $requiredMsg "container.requestCpu") .Values.container.requestCpu | quote }}
-  limits:
-    memory: {{ required (printf $requiredMsg "container.limitMemory") .Values.container.limitMemory | quote }}
-    cpu: {{ required (printf $requiredMsg "container.limitCpu") .Values.container.limitCpu | quote }}
+  {{ include "adp-helm-library.mem-cpu-tiers" $ }}
 volumeMounts:
 - mountPath: /tmp
   name: temp-dir

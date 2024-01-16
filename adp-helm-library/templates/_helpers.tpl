@@ -21,6 +21,65 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- end -}}
 
 {{/*
+CPU and Memory requests and limits Tiers
+*/}}
+{{- define "adp-helm-library.mem-cpu-tiers" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
+{{- $memCpuTier := $.Values.container.memCpuTier | default "M" }}
+
+{{- $requestsMemory := "" }}
+{{- $requestsCpu := "" }}
+{{- $limitsMemory := "" }}
+{{- $limitsCpu := "" }}
+
+{{- if eq $memCpuTier "S" }}
+{{- $requestsMemory = "50Mi" }}
+{{- $requestsCpu = "50m" }}
+{{- $limitsMemory = "50Mi" }}
+{{- $limitsCpu = "50m" }}
+
+{{- else if eq $memCpuTier "M" }}
+{{- $requestsMemory = "100Mi" }}
+{{- $requestsCpu = "100m" }}
+{{- $limitsMemory = "100Mi" }}
+{{- $limitsCpu = "100m" }}
+
+{{- else if eq $memCpuTier "L" }}
+{{- $requestsMemory = "150Mi" }}
+{{- $requestsCpu = "150m" }}
+{{- $limitsMemory = "150Mi" }}
+{{- $limitsCpu = "150m" }}
+
+{{- else if eq $memCpuTier "XL" }}
+{{- $requestsMemory = "200Mi" }}
+{{- $requestsCpu = "200m" }}
+{{- $limitsMemory = "200Mi" }}
+{{- $limitsCpu = "200m" }}
+
+{{- else if eq $memCpuTier "XXL" }}
+{{- $requestsMemory = "300Mi" }}
+{{- $requestsCpu = "300m" }}
+{{- $limitsMemory = "600Mi" }}
+{{- $limitsCpu = "600m" }}
+
+{{- else if eq $memCpuTier "CUSTOM" }}
+{{- $requestsMemory = required (printf $requiredMsg "container.requestMemory") .Values.container.requestMemory | quote }}
+{{- $requestsCpu = required (printf $requiredMsg "container.requestCpu") .Values.container.requestCpu | quote }}
+{{- $limitsMemory = required (printf $requiredMsg "container.limitMemory") .Values.container.limitMemory | quote }}
+{{- $limitsCpu = required (printf $requiredMsg "container.limitCpu") .Values.container.limitCpu | quote }}
+
+{{- else }}
+{{- fail (printf "Value for memCpuTier is not as expected. '%s' memCpuTier is not in the allowed memCpuTiers (S,M,X,XL,XXL,CUSTOM)." $memCpuTier) }}
+{{- end }}
+  requests:
+    memory: {{ $requestsMemory }}
+    cpu: {{ $requestsCpu }}
+  limits:
+    memory: {{ $limitsMemory }}
+    cpu: {{ $limitsCpu }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "adp-helm-library.selector-labels" -}}
