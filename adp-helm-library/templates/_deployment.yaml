@@ -50,6 +50,10 @@ spec:
       volumes:
       - name: temp-dir
         emptyDir: {}
+      - name: custom-root-ca
+        secret:
+          secretName: custom-ca-trust-secret
+          optional: true
       containers:
       -
 {{ include "adp-helm-library.container.tpl" . | indent 8 }}

@@ -24,6 +24,10 @@ resources:
 volumeMounts:
 - mountPath: /tmp
   name: temp-dir
+- name: custom-root-ca
+  mountPath: /etc/ssl/certs/defra-egress-firewall-cert-01.crt
+  subPath: defra-egress-firewall-cert-01.crt
+  readOnly: true
 {{- end -}}
 {{- define "adp-helm-library.container" -}}
 {{- println "" -}}
