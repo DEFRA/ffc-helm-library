@@ -18,26 +18,12 @@ spec:
     metadata:
       namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
       labels:
-        {{- if .Values.aadWorkloadIdentity }}
         azure.workload.identity/use: "true"
-        {{- end }}
         {{- include "adp-helm-library.labels" . | nindent 8 }}
       annotations:
-        {{- if .Values.deployment.useLinkerd }}
-        linkerd.io/inject: enabled
-        config.linkerd.io/proxy-cpu-limit: 20m
-        config.linkerd.io/proxy-cpu-request: 1m
-        config.linkerd.io/proxy-memory-limit: 80Mi
-        config.linkerd.io/proxy-memory-request: 10Mi
-        {{- end }}
         redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
       priorityClassName: {{ .Values.deployment.priorityClassName| default "default" | quote }}
-      {{- if .Values.serviceAccount }}
-      {{- if .Values.serviceAccount.roleArn }}
-      serviceAccountName: {{ .Values.serviceAccount.name | quote }}
-      {{- end }}
-      {{- end }}
       restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
