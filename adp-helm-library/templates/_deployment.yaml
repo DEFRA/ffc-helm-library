@@ -24,6 +24,9 @@ spec:
         redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
       priorityClassName: {{ .Values.deployment.priorityClassName| default "default" | quote }}
+      {{- if .Values.serviceAccount }}
+      serviceAccountName: {{ .Values.serviceAccount.name | quote }}
+      {{- end }}
       restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:

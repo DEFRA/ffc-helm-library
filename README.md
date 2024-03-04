@@ -268,6 +268,21 @@ spec:
 
 ```
 
+By default, Azure workload identity is enabled in the deployment template by the addition of below label and a service account with the name of the microservice is added to the deployment. These inputs are **not required** from user and are handled by platform.
+
+```
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  ...
+  template:
+    spec:
+      metadata:
+      labels:
+        azure.workload.identity/use: "true"
+      serviceAccountName: "adp-microservice"
+```
+
 #### Optional values
 
 The following value can optionally be set in the parent chart's `values.yaml` to enable the configuration of imagePullSecrets in the K8s object or change the running user:
