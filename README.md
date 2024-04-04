@@ -1,3 +1,13 @@
+---
+title: ADP Platform Helm Library Chart
+summary: A Helm library chart that captures general configuration for the ADP Kubernetes platform.
+uri: https://defra.github.io/adp-documentation/Developer-Reference/adp-portal/ongoing-development//
+authors:
+    - Ganesh Shivajee Ghadge
+    - Jeevan Kuduva Ravindran
+date: 2024-04-04
+---
+
 # ADP Platform Helm Library Chart
 
 A Helm library chart that captures general configuration for the ADP Kubernetes platform. It can be used by any microservice Helm chart to import K8s object templates configured to run on the ADP platform.
