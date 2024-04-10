@@ -43,6 +43,8 @@ spec:
         keyValues:
           - key: "Sentinel"
             label: {{ .Values.name }}
+          - key: "Sentinel"
+            label: {{ printf "%s-%s" .Values.name .Chart.Version }}
   secret:
     target:
       secretName: {{ printf "%s-secret" .Values.name | quote }}
