@@ -10,6 +10,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: {{  required (printf $requiredMsg ".ingress.class") .Values.ingress.class | quote }}
     {{- if eq .Values.ingress.class "nginx" }}
+    nginx.org/client-max-body-size: 1024m
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
