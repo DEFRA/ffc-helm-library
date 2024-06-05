@@ -1,0 +1,5 @@
+apiVersion: v2
+name: adp-helm-library
+description: A Helm library chart that captures general configuration for the ADP Kubernetes platform
+type: library
+version: 1.0.15

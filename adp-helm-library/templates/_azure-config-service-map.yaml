@@ -1,0 +1,63 @@
+{{- define "adp-helm-library.azure-config-service-map" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
+apiVersion: azconfig.io/v1
+kind: AzureAppConfigurationProvider
+metadata:
+  name: {{ required (printf $requiredMsg "name") (printf "%s-config-map" .Values.name) | quote }}
+  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  labels:
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.containerConfigMap }}
+  endpoint: {{ printf "https://%s.azconfig.io" .Values.containerConfigMap.configServiceName }}
+  {{- else}}
+  endpoint: ""
+  {{- end }}
+  target:
+    configMapName: {{ printf "%s-config" .Values.name | quote }}
+  {{- if .Values.containerConfigMap }}
+  auth:
+    workloadIdentity:
+      managedIdentityClientId: {{ .Values.containerConfigMap.configServiceMIClientId }}
+  {{- end }}
+  configuration:
+    selectors:
+      - keyFilter: "*"
+        labelFilter: {{ .Values.name | quote }}
+      - keyFilter: "*"
+        labelFilter: "shared"
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.selector }}
+      {{- range $selector := $.Values.containerConfigMap.keyValues.selector }}
+      - keyFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.selector.keyFilter") $selector.keyFilter | quote }}
+        labelFilter: {{ required (printf $requiredMsg "containerConfigMap.keyValues.selector.labelFilter") $selector.labelFilter | quote }}
+      {{- end }}
+      {{- end }}
+    refresh:
+      enabled: true
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.refresh }}
+      interval: {{ .Values.containerConfigMap.keyValues.refresh.interval }}
+      {{- else}}
+      interval: "1m"
+      {{- end}}
+      monitoring:
+        keyValues:
+          - key: "Sentinel"
+            label: {{ .Values.name }}
+          - key: "Sentinel"
+            label: {{ printf "%s-%s" .Values.name .Chart.Version }}
+  secret:
+    target:
+      secretName: {{ printf "%s-secret" .Values.name | quote }}
+    {{- if .Values.containerConfigMap }}
+    auth:
+      workloadIdentity:
+        managedIdentityClientId: {{ .Values.containerConfigMap.serviceMIClientId }}
+    {{- end }}
+    refresh:
+      enabled: true
+      {{- if and .Values.containerConfigMap .Values.containerConfigMap.keyValues .Values.containerConfigMap.keyValues.keyVaults .Values.containerConfigMap.keyValues.keyVaults.refresh }}
+      interval: {{ .Values.containerConfigMap.keyValues.keyVaults.refresh.interval }}
+      {{- else}}
+      interval: "5m"
+      {{- end }}
+{{- end }}

@@ -1,0 +1,36 @@
+name: $(BuildID)
+
+parameters:
+- name: publishFromFeature
+  displayName: Publish from feature branch
+  type: boolean
+  default: false
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - 'main'
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: windows-latest
+
+resources:
+  repositories:
+    - repository: DEFRA-ADPPipelineCommon
+      name: DEFRA/adp-pipeline-common
+      endpoint: DEFRA
+      type: github
+      ref: main
+
+extends:
+  template: /pipelines/common-helm-library-git-publish.yaml@DEFRA-ADPPipelineCommon 
+  parameters:
+    helmLibraryName: 'adp-helm-library'
+    chartRepoPublicUrl: 'https://raw.githubusercontent.com/defra/adp-helm-repository/main/adp-helm-library/'
+    publishFromFeature: ${{ parameters.publishFromFeature }}

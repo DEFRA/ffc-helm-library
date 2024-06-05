@@ -1,12 +1,12 @@
-{{- define "ffc-helm-library.horizontal-pod-autoscaler.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.horizontal-pod-autoscaler.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -15,6 +15,6 @@ spec:
   minReplicas: {{ required (printf $requiredMsg "minReplicas") .Values.deployment.minReplicas }}
   maxReplicas: {{ required (printf $requiredMsg "maxReplicas") .Values.deployment.maxReplicas }}
 {{- end }}
-{{- define "ffc-helm-library.horizontal-pod-autoscaler" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.horizontal-pod-autoscaler.tpl") -}}
+{{- define "adp-helm-library.horizontal-pod-autoscaler" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.horizontal-pod-autoscaler.tpl") -}}
 {{- end -}}

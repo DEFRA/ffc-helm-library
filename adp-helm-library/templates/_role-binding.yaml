@@ -1,12 +1,12 @@
-{{- define "ffc-helm-library.role-binding.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
+{{- define "adp-helm-library.role-binding.tpl" -}}
+{{- $requiredMsg := include "adp-helm-library.default-check-required-msg" . -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ required (printf $requiredMsg "name") .Values.name }}-developer-1-admin-rolebinding
   namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace }}
   labels:
-    {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- include "adp-helm-library.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16,6 +16,6 @@ subjects:
   kind: User
   name: {{ required (printf $requiredMsg "namespace") .Values.namespace }}-developer-1
 {{- end -}}
-{{- define "ffc-helm-library.role-binding" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.role-binding.tpl") -}}
+{{- define "adp-helm-library.role-binding" -}}
+{{- include "adp-helm-library.util.merge" (append . "adp-helm-library.role-binding.tpl") -}}
 {{- end -}}
