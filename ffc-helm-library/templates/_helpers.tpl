@@ -9,14 +9,13 @@ A default message string to be used when checking for a required value
 Common labels
 */}}
 {{- define "ffc-helm-library.labels" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
-app: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
-app.kubernetes.io/name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app: {{ .Release.Namespace | quote }}
+app.kubernetes.io/name: {{ .Chart.Name | quote }}
+app.kubernetes.io/instance: {{ .Chart.Name | quote }}
 app.kubernetes.io/version: {{ .Values.labels.version | default "1.0.0" | quote }}
 app.kubernetes.io/component: {{ .Values.labels.component | default "service" | quote }}
-app.kubernetes.io/part-of: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: {{ .Release.Namespace | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- end -}}
 
@@ -24,9 +23,8 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 Selector labels
 */}}
 {{- define "ffc-helm-library.selector-labels" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
-app.kubernetes.io/name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/name: {{ .Chart.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end -}}
 
 {{/*

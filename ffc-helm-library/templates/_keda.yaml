@@ -1,0 +1,17 @@
+{{- define "ffc-helm-library.keda-scaled-object.tpl" -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  scaleTargetRef:
+    name: {{ .Chart.Name }}
+  minReplicaCount: {{ .Values.deployment.minReplicas | default 1 }}
+  maxReplicaCount: {{ .Values.deployment.maxReplicas | default 100 }}
+  triggers:
+  -
+{{- end }}
+{{- define "ffc-helm-library.keda-scaled-object" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.keda-scaled-object.tpl") -}}
+{{- end -}}

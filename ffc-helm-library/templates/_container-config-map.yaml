@@ -1,10 +1,9 @@
 {{- define "ffc-helm-library.container-config-map.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ required (printf $requiredMsg "containerConfigMap.name") .Values.containerConfigMap.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  name: {{ .Chart.Name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 data: {}

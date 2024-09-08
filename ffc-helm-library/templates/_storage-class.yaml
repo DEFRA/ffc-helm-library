@@ -4,7 +4,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: {{ required (printf $requiredMsg "storageClass.name") .Values.storageClass.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace  | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 provisioner: {{ .Values.storageClass.provisioner | default "blob.csi.azure.com" | quote }}

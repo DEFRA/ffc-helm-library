@@ -1,15 +1,15 @@
 {{- define "ffc-helm-library.container.tpl" -}}
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
-name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+name: {{ .Chart.Name | quote }}
 image: {{ required (printf $requiredMsg "image") .Values.image | quote }}
 envFrom:
 {{- if .Values.containerConfigMap }}
 - configMapRef:
-    name: {{ .Values.containerConfigMap.name }}
+    name: {{ .Chart.Name | quote }}
 {{- end }}
 {{- if .Values.containerSecret }}
 - secretRef:
-    name: {{ .Values.containerSecret.name }}
+    name: {{ .Chart.Name | quote }}
 {{- end }}
 {{- if .Values.container.command }}
 command:
@@ -24,12 +24,46 @@ securityContext:
   readOnlyRootFilesystem: {{ .Values.container.readOnlyRootFilesystem | default true }}
   allowPrivilegeEscalation: {{ .Values.container.allowPrivilegeEscalation | default false }}
 resources:
+  {{- if eq .Values.container.resourceTier "S" }}
+  requests:
+    memory: "100Mi"
+    cpu: "100m"
+  limits:
+    memory: "100Mi"
+  {{- else if eq .Values.container.resourceTier "M" }}
+  requests:
+    memory: "250Mi"
+    cpu: "250m"
+  limits:
+    memory: "250Mi"
+  {{- else if eq .Values.container.resourceTier "L" }}
+  requests:
+    memory: "500Mi"
+    cpu: "500m"
+  limits:
+    memory: "500Mi"
+  {{- else if eq .Values.container.resourceTier "XL" }}
+  requests:
+    memory: "1Gi"
+    cpu: "1"
+  limits:
+    memory: "1Gi"
+  {{- else }}
   requests:
     memory: {{ required (printf $requiredMsg "container.requestMemory") .Values.container.requestMemory | quote }}
     cpu: {{ required (printf $requiredMsg "container.requestCpu") .Values.container.requestCpu | quote }}
   limits:
     memory: {{ required (printf $requiredMsg "container.limitMemory") .Values.container.limitMemory | quote }}
-    cpu: {{ required (printf $requiredMsg "container.limitCpu") .Values.container.limitCpu | quote }}
+    {{- if .Values.container.limitCpu }}
+    cpu: {{ .Values.container.limitCpu | quote }}
+    {{- end }}
+  {{- end }}
+{{- if .Values.container.port }}
+ports:
+- containerPort: {{ .Values.container.port }}
+  name: http
+  protocol: TCP
+{{- end }}
 volumeMounts:
 - mountPath: /tmp
   name: temp-dir

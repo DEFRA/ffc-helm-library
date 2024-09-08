@@ -4,13 +4,13 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ required (printf $requiredMsg "persistentVolumeClaim.name") .Values.persistentVolumeClaim.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace  | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
   resources:
     requests:
-      storage: {{ .Values.persistentVolumeClaim.size | quote }}
+      storage: {{ required (printf $requiredMsg "persistentVolume.size") .Values.persistentVolumeClaim.size | quote }}
   storageClassName: {{ .Values.persistentVolumeClaim.storageClassName | default "" }}
 {{- end }}
 {{- define "ffc-helm-library.persistent-volume-claim" -}}
