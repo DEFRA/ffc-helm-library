@@ -4,14 +4,14 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ required (printf $requiredMsg "persistentVolume.name") .Values.persistentVolume.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace  | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
   capacity:  
-    storage: {{ .Values.persistentVolume.size | quote }}
+    storage: {{ required (printf $requiredMsg "persistentVolume.size") .Values.persistentVolume.size | quote }}
   storageClassName: {{ required (printf $requiredMsg "persistentVolume.storageClassName") .Values.persistentVolume.storageClassName | quote }}
-  persistentVolumeReclaimPolicy: {{ .Values.persistentVolume.reclaimPolicy | default "Retain" }}
+  persistentVolumeReclaimPolicy: {{ .Values.persistentVolume.reclaimPolicy | default "Retain" | quote }}
 {{- end }}
 {{- define "ffc-helm-library.persistent-volume" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.persistent-volume.tpl") -}}

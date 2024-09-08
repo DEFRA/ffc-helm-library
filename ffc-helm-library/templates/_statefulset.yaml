@@ -1,47 +1,38 @@
-{{- define "ffc-helm-library.deployment.tpl" -}}
+{{- define "ffc-helm-library.statefulset.tpl" -}}
 {{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Chart.Name | quote }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
+  podManagementPolicy: Parallel
   replicas: {{ .Values.deployment.replicas | default 1 }}
-  minReadySeconds: {{ .Values.deployment.minReadySeconds | default 0 }}
-  strategy: {}
+  serviceName: {{ .Chart.Name | quote }}
   selector:
     matchLabels:
       {{- include "ffc-helm-library.selector-labels" . | nindent 6 }}
   template:
     metadata:
-      namespace: {{ .Release.Namespace | quote }}
       labels:
         {{- if .Values.azureIdentity }}
         aadpodidbinding: {{ .Chart.Name }}-identity-selector
         {{- end }}
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
       annotations:
-        {{- if .Values.deployment.useLinkerd }}
         linkerd.io/inject: enabled
-        config.linkerd.io/proxy-cpu-limit: 20m
-        config.linkerd.io/proxy-cpu-request: 1m
-        config.linkerd.io/proxy-memory-limit: 80Mi
-        config.linkerd.io/proxy-memory-request: 10Mi
-        {{- end }}
         redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
-      priorityClassName: {{ .Values.deployment.priorityClassName | default "default" | quote }}
       {{- if .Values.serviceAccount }}
       {{- if .Values.serviceAccount.roleArn }}
       serviceAccountName: {{ .Values.serviceAccount.name | quote }}
       {{- end }}
       {{- end }}
-      restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
-      - name: {{ required (printf $requiredMsg "deployment.imagePullSecret") .Values.deployment.imagePullSecret| quote }}
+      - name: {{ required (printf $requiredMsg "deployment.imagePullSecret") .Values.deployment.imagePullSecret | quote }}
       {{- end }}
       securityContext:
         fsGroup: {{ .Values.deployment.runAsUser | default 1000 }}
@@ -58,8 +49,6 @@ spec:
       {{- end }}
 {{ include "ffc-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
-{{- define "ffc-helm-library.deployment" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.deployment.tpl") -}}
+{{- define "ffc-helm-library.statefulset" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.statefulset.tpl") -}}
 {{- end -}}
-
-

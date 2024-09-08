@@ -3,8 +3,8 @@
 apiVersion: "aadpodidentity.k8s.io/v1"
 kind: AzureIdentity
 metadata:
-  name: {{ required (printf $requiredMsg "name") .Values.name }}-identity
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  name: {{ .Chart.Name }}-identity
+  namespace: {{ .Release.Name | quote }}
   labels: {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
     aadpodidentity.k8s.io/Behavior: namespaced

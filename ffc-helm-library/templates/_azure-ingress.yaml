@@ -1,27 +1,24 @@
 {{- define "ffc-helm-library.azure-ingress.tpl" -}}
-{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  name: {{ .Chart.Name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{  required (printf $requiredMsg ".ingress.class") .Values.ingress.class | quote }}
-    {{- if eq .Values.ingress.class "nginx" }}
+    kubernetes.io/ingress.class: {{  .Values.ingress.class | default "nginx" | quote }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
     {{- if and (.Values.ingress.type) (not .Values.pr) }}
     nginx.org/mergeable-ingress-type: {{ .Values.ingress.type | quote }}
     {{- end }}
-    {{- end }}
 spec:
   rules:
 {{- if .Values.ingress.endpoint }}
   {{- if .Values.pr }}
-  - host: {{ .Values.name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  - host: {{ .Chart.Name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
   {{ else }}
   - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
   {{- end }}
@@ -37,7 +34,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+            name: {{ .Chart.Name | quote }}
             port:
               number: 80
 {{- end }}

@@ -3,15 +3,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
-  namespace: {{ required (printf $requiredMsg "namespace") .Values.namespace | quote }}
+  name: {{ .Chart.Name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ required (printf $requiredMsg "name") .Values.name | quote }}
+    name: {{ .Chart.Name | quote }}
   minReplicas: {{ required (printf $requiredMsg "minReplicas") .Values.deployment.minReplicas }}
   maxReplicas: {{ required (printf $requiredMsg "maxReplicas") .Values.deployment.maxReplicas }}
 {{- end }}
