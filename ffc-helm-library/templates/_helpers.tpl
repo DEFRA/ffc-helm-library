@@ -24,7 +24,7 @@ Selector labels
 */}}
 {{- define "ffc-helm-library.selector-labels" -}}
 app.kubernetes.io/name: {{ .Chart.Name | quote }}
-app.kubernetes.io/instance: {{ .Release.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Namespace | quote }}
 {{- end -}}
 
 {{/*
