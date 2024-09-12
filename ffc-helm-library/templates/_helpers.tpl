@@ -11,7 +11,7 @@ Common labels
 {{- define "ffc-helm-library.labels" -}}
 app: {{ .Release.Namespace | quote }}
 app.kubernetes.io/name: {{ .Release.Namespace | quote }}
-app.kubernetes.io/instance: {{ .Chart.Name | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
 app.kubernetes.io/version: {{ .Values.labels.version | default "1.0.0" | quote }}
 app.kubernetes.io/component: {{ .Values.labels.component | default "service" | quote }}
 app.kubernetes.io/part-of: {{ .Release.Namespace | quote }}
@@ -24,7 +24,7 @@ Selector labels
 */}}
 {{- define "ffc-helm-library.selector-labels" -}}
 app.kubernetes.io/name: {{ .Chart.Name | quote }}
-app.kubernetes.io/instance: {{ .Release.Namespace | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end -}}
 
 {{/*
