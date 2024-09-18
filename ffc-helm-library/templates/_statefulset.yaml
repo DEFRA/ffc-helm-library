@@ -17,7 +17,9 @@ spec:
   template:
     metadata:
       labels:
-        {{- if .Values.azureIdentity }}
+        {{- if and (.Values.azureIdentity) (.Values.workloadIdentity) }}
+        azure.workload.identity/use: "true"
+        {{- else if .Values.azureIdentity }}
         aadpodidbinding: {{ .Chart.Name }}-identity-selector
         {{- end }}
         {{- include "ffc-helm-library.labels" . | nindent 8 }}
