@@ -249,6 +249,9 @@ A K8s `ServiceAccount` object.
 
 A basic usage of this object template would involve the creation of `templates/service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
+A service account is needed when the service needs to use Workload Identity to connect to the resources in Azure
+After adding the service account, `workloadIdentity: true` needs to be added to the `value.yaml` file. By activating Workload Identity, the Pod Identity will be disabled. 
+
 ```yaml
 {{- include "ffc-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
 {{- define "ffc-microservice.service-account" -}}
