@@ -1,4 +1,5 @@
 {{- define "ffc-helm-library.container-config-map.tpl" -}}
+{{- $requiredMsg := include "ffc-helm-library.default-check-required-msg" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,7 +7,10 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
-data: {}
+data:
+{{- if (.Values.azureIdentity) }}
+  AZURE_CLIENT_ID: {{ required (printf $requiredMsg "azureIdentity.clientID") .Values.azureIdentity.clientID | quote }}
+{{- end }}
 {{- end }}
 {{- define "ffc-helm-library.container-config-map" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.container-config-map.tpl") -}}
