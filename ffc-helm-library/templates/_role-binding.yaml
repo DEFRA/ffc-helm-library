@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Chart.name }}-developer-1-admin-rolebinding
+  name: {{ .Chart.Name }}-developer-1-admin-rolebinding
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
