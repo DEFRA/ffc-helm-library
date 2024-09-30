@@ -39,7 +39,10 @@ spec:
       {{- if .Values.serviceAccount.roleArn }}
       serviceAccountName: {{ .Values.serviceAccount.name | quote }}
       {{- end }}
+      {{- else if .Values.workloadIdentity }}
+      serviceAccountName: {{ .Chart.Name | quote }}
       {{- end }}
+      
       restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:

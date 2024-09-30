@@ -31,6 +31,8 @@ spec:
       {{- if .Values.serviceAccount.roleArn }}
       serviceAccountName: {{ .Values.serviceAccount.name | quote }}
       {{- end }}
+      {{- else if .Values.workloadIdentity }}
+      serviceAccountName: {{ .Chart.Name | quote }}
       {{- end }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
