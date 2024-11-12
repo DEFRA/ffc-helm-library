@@ -31,11 +31,6 @@ node {
         sh("helm lint $repoName")
       }
 
-      stage('Helm scan') {
-        sh("echo scanning $repoName")
-        sh(snyk)
-      }
-
       stage('Publish Beta Helm chart') {
         def currentVersion = sh(returnStdout: true, script:"cat $repoName/Chart.yaml | yq r - version").trim()
         // sh("yq e -i '.version = \"${currentVersion}-beta\"' $repoName/Chart.yaml")
