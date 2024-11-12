@@ -23,6 +23,11 @@ imagePullPolicy: {{ .Values.container.imagePullPolicy | default "Always" | quote
 securityContext:
   readOnlyRootFilesystem: {{ .Values.container.readOnlyRootFilesystem | default true }}
   allowPrivilegeEscalation: {{ .Values.container.allowPrivilegeEscalation | default false }}
+  capabilities:
+    drop:
+    - ALL
+    add:
+    - NET_BIND_SERVICE
 resources:
   {{- if .Values.container.resourceTier }}
   {{- if eq .Values.container.resourceTier "S" }}
