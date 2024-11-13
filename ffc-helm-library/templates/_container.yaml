@@ -28,6 +28,7 @@ securityContext:
     - ALL
     add:
     - NET_BIND_SERVICE
+    - SYS_TIME
   seccompProfile:
     type: RuntimeDefault
 resources:
