@@ -28,6 +28,8 @@ securityContext:
     - ALL
     add:
     - NET_BIND_SERVICE
+  seccompProfile:
+    type: RuntimeDefault
 resources:
   {{- if .Values.container.resourceTier }}
   {{- if eq .Values.container.resourceTier "S" }}
