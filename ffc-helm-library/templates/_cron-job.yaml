@@ -7,6 +7,9 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
+    {{- if and (.Values.azureIdentity) (.Values.workloadIdentity) }}
+    azure.workload.identity/use: "true"
+    {{- end }}
 spec:
   schedule: {{ required (printf $requiredMsg "cronJob.schedule") .Values.cronJob.schedule | quote }}
   concurrencyPolicy: {{ required (printf $requiredMsg "cronJob.concurrencyPolicy") .Values.cronJob.concurrencyPolicy | quote }}
@@ -32,11 +35,10 @@ spec:
             emptyDir: {}
           containers:
           {{- if .Values.container }}
-          - {{ include "ffc-helm-library.container" (list . (printf "%s.container" .Chart.Name )) }}
+          - {{ include "ffc-helm-library.container" (list . (printf "%s.container" .Chart.Name )) | nindent 12 }}
           {{- else }}
           -
           {{- end }}
-{{ include "ffc-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
 {{- define "ffc-helm-library.cron-job" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.cron-job.tpl") -}}
