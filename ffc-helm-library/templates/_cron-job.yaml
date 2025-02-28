@@ -36,7 +36,7 @@ spec:
           {{- else }}
           -
           {{- end }}
-{{ include "ffc-helm-library.container.tpl" . | indent 12 }}
+{{ include "ffc-helm-library.container.tpl" . | indent 8 }}
 {{- end }}
 {{- define "ffc-helm-library.cron-job" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.cron-job.tpl") -}}
