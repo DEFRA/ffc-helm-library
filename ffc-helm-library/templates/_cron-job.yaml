@@ -33,6 +33,9 @@ spec:
           volumes:
           - name: temp-dir
             emptyDir: {}
+          {{- if .Values.workloadIdentity }}
+          serviceAccountName: {{ .Chart.Name | quote }}
+          {{- end }}
           containers:
           {{- if .Values.container }}
           - {{ include "ffc-helm-library.container" (list . (printf "%s.container" .Chart.Name )) | nindent 12 }}
