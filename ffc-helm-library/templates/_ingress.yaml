@@ -9,6 +9,9 @@ metadata:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.ingress.class | default "nginx" | quote }}
+    ingress.kubernetes.io/ssl-redirect: {{ .Values.ingress.sslRedirect | default "false" | quote }}
+    nginx.ingress.kubernetes.io/force-ssl-redirect: {{ .Values.ingress.sslRedirect | default "false" | quote }}
+    nginx.ingress.kubernetes.io/ssl-redirect:  {{ .Values.ingress.sslRedirect | default "false" | quote }}
 spec:
   rules:
 {{- if .Values.ingress.endpoint }}
@@ -29,6 +32,10 @@ spec:
             name: {{ .Chart.Name | quote }}
             port:
               number: 80
+  tls:
+  - hosts:
+    - {{ .Values.ingress.endpoint }}{{ if .Values.pr }}-{{ .Values.pr }}{{ end }}.{{ .Values.ingress.server }}
+    secretName: {{ .Values.ingress.tlsSecretName | default "ffc-default-tls" | quote }}            
 {{- end }}
 {{- define "ffc-helm-library.ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.ingress.tpl") -}}
