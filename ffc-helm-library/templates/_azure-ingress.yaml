@@ -43,7 +43,7 @@ spec:
   tls:
   - hosts:
     - {{ .Values.ingress.endpoint }}{{ if .Values.pr }}-{{ .Values.pr }}{{ end }}.{{ .Values.ingress.server }}
-    secretName: {{ .Values.ingress.tlsSecretName | default "ffc-default-tls" | quote }}       
+    secretName: {{ printf "%s-tls" .Chart.Name | quote }}       
 {{- end }}
 {{- end }}
 {{- define "ffc-helm-library.azure-ingress" -}}
