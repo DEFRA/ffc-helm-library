@@ -8,6 +8,9 @@ metadata:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{  .Values.ingress.class | default "nginx" | quote }}
+    ingress.kubernetes.io/ssl-redirect: {{ .Values.ingress.sslRedirect | default "false" | quote }}
+    nginx.ingress.kubernetes.io/force-ssl-redirect: {{ .Values.ingress.sslRedirect | default "false" | quote }}
+    nginx.ingress.kubernetes.io/ssl-redirect:  {{ .Values.ingress.sslRedirect | default "false" | quote }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
@@ -37,6 +40,10 @@ spec:
             name: {{ .Chart.Name | quote }}
             port:
               number: 80
+  tls:
+  - hosts:
+    - {{ .Values.ingress.endpoint }}{{ if .Values.pr }}-{{ .Values.pr }}{{ end }}.{{ .Values.ingress.server }}
+    secretName: {{ .Values.ingress.tlsSecretName | default "ffc-default-tls" | quote }}       
 {{- end }}
 {{- end }}
 {{- define "ffc-helm-library.azure-ingress" -}}
