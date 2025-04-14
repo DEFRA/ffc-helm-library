@@ -42,7 +42,6 @@ spec:
       {{- else if .Values.workloadIdentity }}
       serviceAccountName: {{ .Chart.Name | quote }}
       {{- end }}
-      
       restartPolicy: {{ .Values.deployment.restartPolicy | default "Always" | quote }}
       {{- if .Values.deployment.imagePullSecret }}
       imagePullSecrets:
@@ -51,6 +50,7 @@ spec:
       securityContext:
         fsGroup: {{ .Values.deployment.runAsUser | default 1000 }}
         runAsUser: {{ .Values.deployment.runAsUser | default 1000 }}
+        runAsGroup: {{ .Values.deployment.runAsUser | default 1000 }}
         runAsNonRoot: {{ .Values.deployment.runAsNonRoot | default true }}
       volumes:
       - name: temp-dir
