@@ -144,7 +144,7 @@ The following values need to be set in the parent chart's `values.yaml`:
 
 ```yaml
 image: <string>
-container:  
+container:
   resourceTier: <string> # Allowed values: S, M, L, XL
 ```
 
@@ -222,6 +222,7 @@ The following value can optionally be set in the parent chart's `values.yaml` to
 
 ```yaml
 deployment:
+  automountServiceAccountToken: <boolean> # defaults to true
   imagePullSecret: <string>
   runAsUser: <integer>
   runAsNonRoot: <boolean>
@@ -250,7 +251,7 @@ A K8s `ServiceAccount` object.
 A basic usage of this object template would involve the creation of `templates/service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 A service account is needed when the service needs to use Workload Identity to connect to the resources in Azure
-After adding the service account, `workloadIdentity: true` needs to be added to the `value.yaml` file. By activating Workload Identity, the Pod Identity will be disabled. 
+After adding the service account, `workloadIdentity: true` needs to be added to the `value.yaml` file. By activating Workload Identity, the Pod Identity will be disabled.
 
 ```yaml
 {{- include "ffc-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
@@ -355,7 +356,7 @@ ingress:
   path: <string>
 ```
 
-The `type` value is used to create a [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types) 
+The `type` value is used to create a [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types)
 and should have the value `master` or `minion`.
 
 ### Azure Ingress template (master)
@@ -480,7 +481,7 @@ service:
 * Template file: `_horizontal-pod-autoscaler.yaml`
 * Template name: `helm-library.horizontal-pod-autoscaler`
 
-A k8s `HorizontalPodAutoscaler`.  
+A k8s `HorizontalPodAutoscaler`.
 
 A basic usage of this object template would involve the creation of `templates/horizontal-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
 
@@ -519,7 +520,7 @@ deployment:
 * Template file: `_vertical-pod-autoscaler.yaml`
 * Template name: `helm-library.vertical-pod-autoscaler`
 
-A k8s `VerticalPodAutoscaler`.  
+A k8s `VerticalPodAutoscaler`.
 
 A basic usage of this object template would involve the creation of `templates/vertical-pod-autoscaler.yaml` in the parent Helm chart (e.g. `microservice`).
 
@@ -543,7 +544,7 @@ deployment:
 * Template file: `_storage-class.yaml`
 * Template name: `helm-library.storage-class`
 
-A k8s `StorageClass`.  
+A k8s `StorageClass`.
 
 A basic usage of this object template would involve the creation of `templates/storage-class.yaml` in the parent Helm chart (e.g. `microservice`).
 
@@ -558,7 +559,7 @@ A basic usage of this object template would involve the creation of `templates/s
 * Template file: `_persistent-volume.yaml`
 * Template name: `helm-library.persistent-volume`
 
-A k8s `PersistentVolume`.  
+A k8s `PersistentVolume`.
 
 A basic usage of this object template would involve the creation of `templates/persistent-volume.yaml` in the parent Helm chart (e.g. `microservice`).
 
@@ -573,7 +574,7 @@ A basic usage of this object template would involve the creation of `templates/p
 * Template file: `_persistent-volume-claim.yaml`
 * Template name: `helm-library.persistent-volume-claim`
 
-A k8s `PersistentVolumeClaim`.  
+A k8s `PersistentVolumeClaim`.
 
 A basic usage of this object template would involve the creation of `templates/persistent-volume-claim.yaml` in the parent Helm chart (e.g. `microservice`).
 
@@ -613,7 +614,7 @@ Common selector labels that can be applied where necessary to K8s objects on the
 * Template name: `ffc-helm-library.http-get-probe`
 * Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
 
-Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)). 
+Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)).
 
 #### Required values
 The following values need to be passed to the probe in the `<map_of_probe_values>`:
@@ -661,7 +662,7 @@ timeoutSeconds: <integer>
 * Template file: `_cron-job.yaml`
 * Template name: `ffc-helm-library.cron-job`
 
-A k8s `CronJob`.  
+A k8s `CronJob`.
 
 A basic usage of this object template would involve the creation of `templates/cron-job.yaml` in the parent Helm chart (e.g. `microservice`) that includes the template defined in `_container.yaml` template:
 

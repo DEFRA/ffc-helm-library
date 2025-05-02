@@ -34,6 +34,11 @@ spec:
         {{- end }}
         redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
+      {{- if hasKey .Values.deployment "automountServiceAccountToken" }}
+      automountServiceAccountToken: {{ .Values.deployment.automountServiceAccountToken }}
+      {{- else }}
+      automountServiceAccountToken: true
+      {{- end }}
       priorityClassName: {{ .Values.deployment.priorityClassName | default "default" | quote }}
       {{- if .Values.serviceAccount }}
       {{- if .Values.serviceAccount.roleArn }}
