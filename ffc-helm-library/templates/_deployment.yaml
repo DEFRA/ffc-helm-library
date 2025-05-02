@@ -37,7 +37,7 @@ spec:
       {{- if hasKey .Values.deployment "automountServiceAccountToken" }}
       automountServiceAccountToken: {{ .Values.deployment.automountServiceAccountToken }}
       {{- else }}
-      automountServiceAccountToken: true
+      automountServiceAccountToken: false
       {{- end }}
       priorityClassName: {{ .Values.deployment.priorityClassName | default "default" | quote }}
       {{- if .Values.serviceAccount }}

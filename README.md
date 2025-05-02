@@ -222,7 +222,7 @@ The following value can optionally be set in the parent chart's `values.yaml` to
 
 ```yaml
 deployment:
-  automountServiceAccountToken: <boolean> # defaults to true
+  automountServiceAccountToken: <boolean> # defaults to false
   imagePullSecret: <string>
   runAsUser: <integer>
   runAsNonRoot: <boolean>
