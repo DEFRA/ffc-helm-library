@@ -7,7 +7,7 @@ metadata:
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.class | default "nginx" | quote }}
+    kubernetes.io/ingress.class: {{  .Values.ingress.class | default "nginx" | quote }}
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
@@ -16,27 +16,27 @@ metadata:
     {{- end }}
 spec:
   rules:
-  {{- if .Values.ingress.endpoint }}
-    {{- if .Values.pr }}
-    - host: {{ .Chart.Name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
-    {{- else }}
-    - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
-    {{- end }}
-    {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
-      http:
-    {{- end }}
-  {{- else }}
-    - http:
+{{- if .Values.ingress.endpoint }}
+  {{- if .Values.pr }}
+  - host: {{ .Chart.Name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  {{ else }}
+  - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
   {{- end }}
   {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
-        paths:
-        - path: {{ .Values.ingress.path | default "/" | quote }}
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Chart.Name | quote }}
-              port:
-                number: 80
+    http:
+  {{- end }}
+{{ else }}
+  - http:
+{{- end }}
+{{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
+      paths:
+      - path: {{ .Values.ingress.path | default "/" | quote }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Chart.Name | quote }}
+            port:
+              number: 80
   {{- end }}
 {{- end }}
 
@@ -60,32 +60,31 @@ metadata:
 spec:
   ingressClassName: nginx-oss
   rules:
-  {{- if .Values.ingress.endpoint }}
-    {{- if .Values.pr }}
-    - host: {{ .Chart.Name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
-    {{- else }}
-    - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
-    {{- end }}
-    {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
-      http:
-    {{- end }}
-  {{- else }}
-    - http:
+{{- if .Values.ingress.endpoint }}
+  {{- if .Values.pr }}
+  - host: {{ .Chart.Name }}-{{ .Values.pr }}.{{ .Values.ingress.server }}
+  {{ else }}
+  - host: {{ .Values.ingress.endpoint }}.{{ .Values.ingress.server }}
   {{- end }}
   {{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
-        paths:
-        - path: {{ .Values.ingress.path | default "/" | quote }}
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Chart.Name | quote }}
-              port:
-                number: 80
+    http:
+  {{- end }}
+{{ else }}
+  - http:
+{{- end }}
+{{- if or (not .Values.ingress.type) (ne (.Values.ingress.type | toString) "master") }}
+      paths:
+      - path: {{ .Values.ingress.path | default "/" | quote }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Chart.Name | quote }}
+            port:
+              number: 80
   {{- end }}
 {{- end }}
 
 ---
-
 {{- define "ffc-helm-library.azure-ingress" -}}
 {{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.primary.tpl") }}
 ---
