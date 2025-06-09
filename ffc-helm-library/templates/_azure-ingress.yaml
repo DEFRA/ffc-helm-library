@@ -1,4 +1,4 @@
-{{- define "ffc-helm-library.azure-ingress.primary.tpl" -}}
+{{- define "ffc-helm-library.azure-ingress.tpl" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -37,16 +37,12 @@ spec:
             name: {{ .Chart.Name | quote }}
             port:
               number: 80
-  {{- end }}
 {{- end }}
-
 ---
-
-{{- define "ffc-helm-library.azure-ingress.oss.tpl" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Chart.Name | quote }}-oss
+  name: {{ print .Chart.Name "-oss" }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
@@ -81,12 +77,8 @@ spec:
             name: {{ .Chart.Name | quote }}
             port:
               number: 80
-  {{- end }}
 {{- end }}
-
----
+{{- end }}
 {{- define "ffc-helm-library.azure-ingress" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.primary.tpl") }}
----
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.oss.tpl") }}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.tpl") -}}
 {{- end -}}
