@@ -1,6 +1,5 @@
 {{- define "ffc-helm-library.azure-ingress" -}}
-{{- $ctx := index . 0 }}
-{{- $oss := include "ffc-helm-library.azure-ingress.oss.tpl" $ctx }}
-{{- $main := include "ffc-helm-library.azure-ingress.main.tpl" $ctx }}
-{{- printf "%s\n---\n%s" $oss $main }}
+{{- include "ffc-helm-library.azure-ingress.main" . }}
+--- 
+{{- include "ffc-helm-library.azure-ingress.oss" . }} 
 {{- end -}}

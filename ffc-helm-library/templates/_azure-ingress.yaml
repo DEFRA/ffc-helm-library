@@ -39,3 +39,6 @@ spec:
               number: 80
 {{- end }}
 {{- end }}
+{{- define "ffc-helm-library.azure-ingress.main" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.main.tpl") -}}
+{{- end -}}
