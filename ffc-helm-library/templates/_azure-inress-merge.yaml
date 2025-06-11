@@ -1,0 +1,5 @@
+{{- define "ffc-helm-library.azure-ingress" -}}
+{{- include "ffc-helm-library.azure-ingress.main" . }}
+--- 
+{{- include "ffc-helm-library.azure-ingress.oss" . }} 
+{{- end -}}

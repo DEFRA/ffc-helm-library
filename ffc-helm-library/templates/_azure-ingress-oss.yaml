@@ -1,13 +1,13 @@
-{{- define "ffc-helm-library.azure-ingress.main.tpl" -}}
+{{- define "ffc-helm-library.azure-ingress.oss.tpl" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Chart.Name | quote }}
+  name: {{ print .Chart.Name "-oss" }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{  .Values.ingress.class | default "nginx" | quote }}
+    kubernetes.io/ingress.class: "nginx-oss"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
       grpc_set_header l5d-dst-override $service_name.$namespace.svc.cluster.local:$service_port;
@@ -15,6 +15,7 @@ metadata:
     nginx.org/mergeable-ingress-type: {{ .Values.ingress.type | quote }}
     {{- end }}
 spec:
+  ingressClassName: "nginx-oss"
   rules:
 {{- if .Values.ingress.endpoint }}
   {{- if .Values.pr }}
@@ -39,6 +40,6 @@ spec:
               number: 80
 {{- end }}
 {{- end }}
-{{- define "ffc-helm-library.azure-ingress.main" -}}
-{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.main.tpl") -}}
+{{- define "ffc-helm-library.azure-ingress.oss" -}}
+{{- include "ffc-helm-library.util.merge" (append . "ffc-helm-library.azure-ingress.oss.tpl") -}}
 {{- end -}}
