@@ -5,9 +5,10 @@ A Helm library chart that captures general configuration for the FCP Kubernetes 
 ## Including the library chart
 
 In your microservice Helm chart:
-  * Update `Chart.yaml` to `apiVersion: v2`.
-  * Add the library chart under `dependencies` and choose the version you want (example below). Version number can include `~` or `^` to pick up latest PATCH and MINOR versions respectively.
-  * Issue the following commands to add the repo that contains the library chart, update the repo, then update dependencies in your Helm chart:
+
+- Update `Chart.yaml` to `apiVersion: v2`.
+- Add the library chart under `dependencies` and choose the version you want (example below). Version number can include `~` or `^` to pick up latest PATCH and MINOR versions respectively.
+- Issue the following commands to add the repo that contains the library chart, update the repo, then update dependencies in your Helm chart:
 
 ```bash
 helm repo add ffc https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
@@ -23,9 +24,9 @@ description: A Helm chart to deploy a microservice to the FCP Kubernetes platfor
 name: ffc-microservice
 version: 1.0.0
 dependencies:
-- name: ffc-helm-library
-  version: 4.1.0
-  repository: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
+  - name: ffc-helm-library
+    version: 4.1.0
+    repository: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
 ```
 
 ## Using the K8s object templates
@@ -56,8 +57,8 @@ This example would be for `template/secret.yaml` in the `ffc-microservice` Helm 
 
 ### Azure Identity template
 
-* Template file: `_azure-identity.yaml`
-* Template name: `ffc-helm-library.azure-identity`
+- Template file: `_azure-identity.yaml`
+- Template name: `ffc-helm-library.azure-identity`
 
 A K8s `AzureIdentity` object. Must be used in conjunction with the `AzureIdentityBinding` described below. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity`.
 
@@ -81,8 +82,8 @@ azureIdentity:
 
 ### Azure Identity Binding template
 
-* Template file: `_azure-identity-binding.yaml`
-* Template name: `ffc-helm-library.azure-identity-binding`
+- Template file: `_azure-identity-binding.yaml`
+- Template name: `ffc-helm-library.azure-identity-binding`
 
 A K8s `AzureIdentityBinding` object. Must be used in conjunction with the `AzureIdentity` described above. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity-binding`.
 
@@ -96,8 +97,8 @@ A basic usage of this object template would involve the creation of `templates/a
 
 ### Cluster IP service template
 
-* Template file: `_cluster-ip-service.yaml`
-* Template name: `ffc-helm-library.cluster-ip-service`
+- Template file: `_cluster-ip-service.yaml`
+- Template name: `ffc-helm-library.cluster-ip-service`
 
 A K8s `Service` object of type `ClusterIP`.
 
@@ -121,8 +122,8 @@ container:
 
 ### Container template
 
-* Template file: `_container.yaml`
-* Template name: `ffc-helm-library.container`
+- Template file: `_container.yaml`
+- Template name: `ffc-helm-library.container`
 
 A template for the container definition to be used within a K8s `Deployment` object.
 
@@ -167,8 +168,8 @@ container:
 
 ### Container ConfigMap template
 
-* Template file: `_containter-config-map.yaml`
-* Template name: `ffc-helm-library.containter-config-map`
+- Template file: `_containter-config-map.yaml`
+- Template name: `ffc-helm-library.containter-config-map`
 
 A K8s `ConfigMap` object object to host non-sensitive container configuration data.
 
@@ -185,8 +186,8 @@ data:
 
 ### Container Secret template
 
-* Template file: `_containter-secret.yaml`
-* Template name: `ffc-helm-library.containter-secret`
+- Template file: `_containter-secret.yaml`
+- Template name: `ffc-helm-library.containter-secret`
 
 A K8s `Secret` object to host sensitive data such as a password or token in a container.
 
@@ -203,8 +204,8 @@ data:
 
 ### Deployment template
 
-* Template file: `_deployment.yaml`
-* Template name: `ffc-helm-library.deployment`
+- Template file: `_deployment.yaml`
+- Template name: `ffc-helm-library.deployment`
 
 A K8s `Deployment` object.
 
@@ -232,7 +233,6 @@ deployment:
   minReadySeconds: <integer>
 ```
 
-
 The following value can optionally be set in the parent chart's `values.yaml` to link the deployment to a service account K8s object:
 
 ```yaml
@@ -243,8 +243,8 @@ serviceAccount:
 
 ### Service account template
 
-* Template file: `_service-account.yaml`
-* Template name: `ffc-helm-library.service-account`
+- Template file: `_service-account.yaml`
+- Template name: `ffc-helm-library.service-account`
 
 A K8s `ServiceAccount` object.
 
@@ -262,8 +262,8 @@ After adding the service account, `workloadIdentity: true` needs to be added to 
 
 ### EKS service account template
 
-* Template file: `_eks-service-account.yaml`
-* Template name: `ffc-helm-library.eks-service-account`
+- Template file: `_eks-service-account.yaml`
+- Template name: `ffc-helm-library.eks-service-account`
 
 A K8s `ServiceAccount` object configured for use on AWS's managed K8s service EKS.
 
@@ -288,8 +288,8 @@ serviceAccount:
 
 ### Ingress template
 
-* Template file: `_ingress.yaml`
-* Template name: `ffc-helm-library.ingress`
+- Template file: `_ingress.yaml`
+- Template name: `ffc-helm-library.ingress`
 
 A K8s `Ingress` object that can be configured for Nginx or AWS ALB (Amazon Load Balancer).
 
@@ -303,6 +303,7 @@ metadata:
     <map_of_nginx-ingress-annotations>
 {{- end -}}
 ```
+
 A basic ALB `Ingress` object would involve the creation of `templates/ingress-alb.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```yaml
@@ -327,8 +328,8 @@ ingress:
 
 ### Azure Ingress template
 
-* Template file: `_azure-ingress.yaml`
-* Template name: `ffc-helm-library.azure-ingress`
+- Template file: `_azure-ingress.yaml`
+- Template name: `ffc-helm-library.azure-ingress`
 
 A K8s `Ingress` object that can be configured for Nginx for use in Azure.
 
@@ -361,12 +362,12 @@ and should have the value `master` or `minion`.
 
 ### Azure Ingress template (master)
 
-* Template file: `_azure-ingress-master.yaml`
-* Template name: `ffc-helm-library.azure-ingress-master`
+- Template file: `_azure-ingress-master.yaml`
+- Template name: `ffc-helm-library.azure-ingress-master`
 
 A K8s `Ingress` object that can be configured for Nginx for use in Azure with a `master` [mergeable ingress type](https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/mergeable-ingress-types).
 
-Although the `Azure Ingress template` can also be used to create `master` mergeable ingress types.  This template exists to support scenarios where a Helm chart needs to contain both a `master` and a `minion` resource without conflicts in value properties.
+Although the `Azure Ingress template` can also be used to create `master` mergeable ingress types. This template exists to support scenarios where a Helm chart needs to contain both a `master` and a `minion` resource without conflicts in value properties.
 
 A basic Nginx `Ingress` object would involve the creation of `templates/ingress.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
@@ -392,8 +393,8 @@ ingress:
 
 ### Postgres service template
 
-* Template file: `_postgres-service.yaml`
-* Template name: `ffc-helm-library.postgres-service`
+- Template file: `_postgres-service.yaml`
+- Template name: `ffc-helm-library.postgres-service`
 
 A K8s `Service` object of type `ExternalName` configured to refer to a Postgres database hosted on a server outside of the K8s cluster such as AWS RDS.
 
@@ -419,8 +420,8 @@ postgresService:
 
 ### RBAC role binding template
 
-* Template file: `_role-binding.yaml`
-* Template name: `ffc-helm-library.role-binding`
+- Template file: `_role-binding.yaml`
+- Template name: `ffc-helm-library.role-binding`
 
 A K8s `RoleBinding` object used to bind a role to a user as part of RBAC configuration in the K8s cluster.
 
@@ -435,8 +436,8 @@ A basic usage of this object template would involve the creation of `templates/r
 
 ### Secret template
 
-* Template file: `_secret.yaml`
-* Template name: `ffc-helm-library.secret`
+- Template file: `_secret.yaml`
+- Template name: `ffc-helm-library.secret`
 
 A K8s `Secret` object to host sensitive data such as a password or token.
 
@@ -451,10 +452,82 @@ stringData:
 {{- end -}}
 ```
 
+### Secret Provider Class template
+
+- Template file: `_secret-provider-class.yaml`
+- Template name: `ffc-helm-library.secret-provider-class`
+
+A K8s `SecretProviderClass` object for the Secrets Store CSI Driver. This template enables integration with external secret management systems like Azure Key Vault to mount secrets as volumes in pods.
+
+A basic usage of this object template would involve the creation of `templates/secret-provider-class.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+
+```yaml
+{{- if .Values.secretProviderClass }}
+{{- include "ffc-helm-library.secret-provider-class.tpl" . }}
+{{- end }}
+```
+
+#### Required values
+
+The following values need to be set in the parent chart's `values.yaml` for Azure Key Vault integration:
+
+```yaml
+secretProviderClass:
+  provider: azure
+  azure:
+    userAssignedIdentityID: <string> # Client ID of the managed identity
+    keyvaultName: <string> # Name of the Azure Key Vault
+    tenantId: <string> # Azure tenant ID
+    objects:
+      - objectName: <string> # Name of the secret in Key Vault
+        objectType: secret # Type: secret, key, or cert
+        objectVersion: <string> # Specific version, default: latest
+```
+
+#### Optional values
+
+The following values can optionally be set in the parent chart's `values.yaml`:
+
+```yaml
+# Optional: Create Kubernetes secrets from mounted secrets
+secretObjects:
+  - secretName: <string> # Name of the K8s secret to create
+    type: <string> # Default: "Opaque"
+    data:
+      - objectName: <string> # Name from Key Vault
+        key: <string> # Key name in the K8s secret
+```
+
+#### Example configuration
+
+```yaml
+secretProviderClass:
+  provider: azure
+  azure:
+    userAssignedIdentityID: "12345678-1234-1234-1234-123456789012"
+    keyvaultName: "my-keyvault"
+    tenantId: "87654321-4321-4321-4321-210987654321"
+    objects:
+      - objectName: "database-password"
+        objectType: "secret"
+      - objectName: "api-key"
+        objectType: "secret"
+        objectVersion: "latest"
+
+  secretObjects:
+    - secretName: "app-secrets"
+      type: "Opaque"
+      data:
+        - objectName: "database-password"
+          key: "DB_PASSWORD"
+        - objectName: "api-key"
+          key: "API_KEY"
+```
+
 ### Service template
 
-* Template file: `_service.yaml`
-* Template name: `ffc-helm-library.service`
+- Template file: `_service.yaml`
+- Template name: `ffc-helm-library.service`
 
 A generic K8s `Service` object requiring a service type to be set.
 
@@ -478,8 +551,8 @@ service:
 
 ### Horizontal Pod Autoscaler template
 
-* Template file: `_horizontal-pod-autoscaler.yaml`
-* Template name: `helm-library.horizontal-pod-autoscaler`
+- Template file: `_horizontal-pod-autoscaler.yaml`
+- Template name: `helm-library.horizontal-pod-autoscaler`
 
 A k8s `HorizontalPodAutoscaler`.
 
@@ -517,8 +590,8 @@ deployment:
 
 ### Vertical Pod Autoscaler template
 
-* Template file: `_vertical-pod-autoscaler.yaml`
-* Template name: `helm-library.vertical-pod-autoscaler`
+- Template file: `_vertical-pod-autoscaler.yaml`
+- Template name: `helm-library.vertical-pod-autoscaler`
 
 A k8s `VerticalPodAutoscaler`.
 
@@ -541,8 +614,8 @@ deployment:
 
 ### Storage Class template
 
-* Template file: `_storage-class.yaml`
-* Template name: `helm-library.storage-class`
+- Template file: `_storage-class.yaml`
+- Template name: `helm-library.storage-class`
 
 A k8s `StorageClass`.
 
@@ -556,8 +629,8 @@ A basic usage of this object template would involve the creation of `templates/s
 
 ### Persistent Volume template
 
-* Template file: `_persistent-volume.yaml`
-* Template name: `helm-library.persistent-volume`
+- Template file: `_persistent-volume.yaml`
+- Template name: `helm-library.persistent-volume`
 
 A k8s `PersistentVolume`.
 
@@ -571,8 +644,8 @@ A basic usage of this object template would involve the creation of `templates/p
 
 ### Persistent Volume Claim template
 
-* Template file: `_persistent-volume-claim.yaml`
-* Template name: `helm-library.persistent-volume-claim`
+- Template file: `_persistent-volume-claim.yaml`
+- Template name: `helm-library.persistent-volume-claim`
 
 A k8s `PersistentVolumeClaim`.
 
@@ -590,33 +663,34 @@ In addition to the K8s object templates described above, a number of helper temp
 
 ### Default check required message
 
-* Template name: `ffc-helm-library.default-check-required-msg`
-* Usage: `{{- include "ffc-helm-library.default-check-required-msg" . }}`
+- Template name: `ffc-helm-library.default-check-required-msg`
+- Usage: `{{- include "ffc-helm-library.default-check-required-msg" . }}`
 
 A template defining the default message to print when checking for a required value within the library. This is not designed to be used outside of the library.
 
 ### Labels
 
-* Template name: `ffc-helm-library.labels`
-* Usage: `{{- include "ffc-helm-library.labels" . }}`
+- Template name: `ffc-helm-library.labels`
+- Usage: `{{- include "ffc-helm-library.labels" . }}`
 
 Common labels to apply to `metadata` of all K8s objects on the FCP K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Selector labels
 
-* Template name: `ffc-helm-library.selector-labels`
-* Usage: `{{- include "ffc-helm-library.selector-labels" . }}`
+- Template name: `ffc-helm-library.selector-labels`
+- Usage: `{{- include "ffc-helm-library.selector-labels" . }}`
 
 Common selector labels that can be applied where necessary to K8s objects on the FCP K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
 
 ### Http GET probe
 
-* Template name: `ffc-helm-library.http-get-probe`
-* Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
+- Template name: `ffc-helm-library.http-get-probe`
+- Usage: `{{- include "ffc-helm-library.http-get-probe" (list . <map_of_probe_values>) }}`
 
 Template for configuration of an http GET probe, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)).
 
 #### Required values
+
 The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
 ```yaml
@@ -635,12 +709,13 @@ timeoutSeconds: <integer>
 
 ### Exec probe
 
-* Template name: `ffc-helm-library.exec-probe`
-* Usage: `{{- include "ffc-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
+- Template name: `ffc-helm-library.exec-probe`
+- Usage: `{{- include "ffc-helm-library.exec-probe" (list . <map_of_probe_values>) }}`
 
 Template for configuration of an "exec" probe that runs a local script, which can be used for `readinessProbe` and/or `livenessProbe` in a container definition within a `Deployment` (see [container template](#container-template)).
 
 #### Required values
+
 The following values need to be passed to the probe in the `<map_of_probe_values>`:
 
 ```yaml
@@ -659,8 +734,8 @@ timeoutSeconds: <integer>
 
 ### Cron Job template
 
-* Template file: `_cron-job.yaml`
-* Template name: `ffc-helm-library.cron-job`
+- Template file: `_cron-job.yaml`
+- Template name: `ffc-helm-library.cron-job`
 
 A k8s `CronJob`.
 
@@ -675,8 +750,8 @@ A basic usage of this object template would involve the creation of `templates/c
 
 ### StatefulSet template
 
-* Template file: `_statefulset.yaml`
-* Template name: `ffc-helm-library.statefulset`
+- Template file: `_statefulset.yaml`
+- Template name: `ffc-helm-library.statefulset`
 
 A K8s `StatefulSet` object.
 
@@ -696,7 +771,7 @@ http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
 
 The following attribution statement MUST be cited in your products and applications when using this information.
 
->Contains public sector information licensed under the Open Government license v3
+> Contains public sector information licensed under the Open Government license v3
 
 ### About the licence
 
