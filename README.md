@@ -457,7 +457,7 @@ stringData:
 - Template file: `_secret-provider-class.yaml`
 - Template name: `ffc-helm-library.secret-provider-class`
 
-A K8s `SecretProviderClass` object for the Secrets Store CSI Driver. This template enables integration with external secret management systems like Azure Key Vault to mount secrets as volumes in pods.
+A K8s `SecretProviderClass` object for the Secrets Store CSI Driver. This template enables integration with external secret management systems like Azure Key Vault to mount secrets as volumes in pods, using [workload identity](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-identity-access?tabs=azure-portal&pivots=access-with-a-microsoft-entra-workload-identity) for authentication.
 
 A basic usage of this object template would involve the creation of `templates/secret-provider-class.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
@@ -473,15 +473,14 @@ The following values need to be set in the parent chart's `values.yaml` for Azur
 
 ```yaml
 secretProviderClass:
-  provider: azure
   azure:
-    userAssignedIdentityID: <string> # Client ID of the managed identity
+    clientID: <string> # Client ID for workload identity
     keyvaultName: <string> # Name of the Azure Key Vault
     tenantId: <string> # Azure tenant ID
     objects:
       - objectName: <string> # Name of the secret in Key Vault
-        objectType: secret # Type: secret, key, or cert
-        objectVersion: <string> # Specific version, default: latest
+        objectType: secret # Type: secret, key, or cert (default: "secret")
+        objectVersion: <string> # Specific version (optional, default: latest)
 ```
 
 #### Optional values
@@ -489,31 +488,36 @@ secretProviderClass:
 The following values can optionally be set in the parent chart's `values.yaml`:
 
 ```yaml
-# Optional: Create Kubernetes secrets from mounted secrets
-secretObjects:
-  - secretName: <string> # Name of the K8s secret to create
-    type: <string> # Default: "Opaque"
-    data:
-      - objectName: <string> # Name from Key Vault
-        key: <string> # Key name in the K8s secret
+secretProviderClass:
+  azure:
+    usePodIdentity: "false" # Default: "false" (for workload identity)
+
+  # Optional: Create Kubernetes secrets from mounted secrets
+  secretObjects:
+    - secretName: <string> # Name of the K8s secret to create
+      type: <string> # Default: "Opaque"
+      data:
+        - objectName: <string> # Name from Key Vault
+          key: <string> # Key name in the K8s secret
 ```
 
 #### Example configuration
 
 ```yaml
 secretProviderClass:
-  provider: azure
   azure:
-    userAssignedIdentityID: "12345678-1234-1234-1234-123456789012"
-    keyvaultName: "my-keyvault"
-    tenantId: "87654321-4321-4321-4321-210987654321"
+    usePodIdentity: "false" # Default: "false" (can be omitted)
+    clientID: "your-client-id" # Setting this to use workload identity
+    keyvaultName: "your-keyvault-name" # Set to the name of your key vault
+    tenantId: "87654321-4321-4321-4321-210987654321" # Your Azure tenant ID
     objects:
-      - objectName: "database-password"
-        objectType: "secret"
+      - objectName: "database-password" # Set to the name of your secret
+        objectType: "secret" # object types: secret, key, or cert
       - objectName: "api-key"
         objectType: "secret"
-        objectVersion: "latest"
+        objectVersion: "latest" # [OPTIONAL] object versions, default to latest if empty
 
+  # Optional: Create Kubernetes secrets from mounted secrets
   secretObjects:
     - secretName: "app-secrets"
       type: "Opaque"
