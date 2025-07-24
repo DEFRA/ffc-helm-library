@@ -459,6 +459,8 @@ stringData:
 
 A K8s `SecretProviderClass` object for the Secrets Store CSI Driver. This template enables integration with external secret management systems like Azure Key Vault to mount secrets as volumes in pods, using [workload identity](https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-identity-access?tabs=azure-portal&pivots=access-with-a-microsoft-entra-workload-identity) for authentication.
 
+When `secretProviderClass` is configured, secrets from Azure Key Vault are automatically mounted as files at `/mnt/secrets-store` in all containers (Deployment, StatefulSet, and CronJob). Applications can read these secrets directly from the filesystem.
+
 A basic usage of this object template would involve the creation of `templates/secret-provider-class.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```yaml

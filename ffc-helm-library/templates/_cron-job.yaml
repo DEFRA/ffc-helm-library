@@ -13,7 +13,7 @@ metadata:
 spec:
   schedule: {{ required (printf $requiredMsg "cronJob.schedule") .Values.cronJob.schedule | quote }}
   concurrencyPolicy: {{ required (printf $requiredMsg "cronJob.concurrencyPolicy") .Values.cronJob.concurrencyPolicy | quote }}
-  jobTemplate: 
+  jobTemplate:
     spec:
       template:
         metadata:
@@ -33,6 +33,14 @@ spec:
           volumes:
           - name: temp-dir
             emptyDir: {}
+          {{- if .Values.secretProviderClass }}
+          - name: secrets-store
+            csi:
+              driver: secrets-store.csi.x-k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: {{ .Chart.Name | quote }}
+          {{- end }}
           {{- if .Values.workloadIdentity }}
           serviceAccountName: {{ .Chart.Name | quote }}
           {{- end }}
