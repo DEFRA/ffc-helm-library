@@ -83,6 +83,11 @@ ports:
 volumeMounts:
 - mountPath: /tmp
   name: temp-dir
+{{- if .Values.secretProviderClass }}
+- name: secrets-store
+  mountPath: /mnt/secrets-store
+  readOnly: true
+{{- end }}
 {{- end -}}
 {{- define "ffc-helm-library.container" -}}
 {{- println "" -}}
