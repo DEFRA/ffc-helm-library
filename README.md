@@ -224,6 +224,7 @@ The following value can optionally be set in the parent chart's `values.yaml` to
 ```yaml
 deployment:
   automountServiceAccountToken: <boolean> # defaults to false
+  enableReloader: <boolean> # defaults to true; adds the reloader.stakater.com/auto annotation so Stakater Reloader restarts pods when a referenced ConfigMap/Secret changes (requires Reloader installed in the cluster)
   imagePullSecret: <string>
   runAsUser: <integer>
   runAsNonRoot: <boolean>
