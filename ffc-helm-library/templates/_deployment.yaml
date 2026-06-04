@@ -5,6 +5,10 @@ kind: Deployment
 metadata:
   name: {{ .Chart.Name | quote }}
   namespace: {{ .Release.Namespace | quote }}
+  {{- if dig "enableReloader" true (.Values.deployment | default dict) }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+  {{- end }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
 spec:
@@ -32,7 +36,6 @@ spec:
         config.linkerd.io/proxy-memory-limit: 80Mi
         config.linkerd.io/proxy-memory-request: 10Mi
         {{- end }}
-        redeployOnChange: {{ randAlphaNum 5 | quote }}
     spec:
       {{- if hasKey .Values.deployment "automountServiceAccountToken" }}
       automountServiceAccountToken: {{ .Values.deployment.automountServiceAccountToken }}

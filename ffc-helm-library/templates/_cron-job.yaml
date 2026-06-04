@@ -5,6 +5,10 @@ kind: CronJob
 metadata:
   name: {{ .Chart.Name | quote }}
   namespace: {{ .Release.Namespace | quote }}
+  {{- if dig "enableReloader" true (.Values.deployment | default dict) }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+  {{- end }}
   labels:
     {{- include "ffc-helm-library.labels" . | nindent 4 }}
     {{- if and (.Values.azureIdentity) (.Values.workloadIdentity) }}
