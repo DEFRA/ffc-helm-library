@@ -26,9 +26,12 @@ securityContext:
   capabilities:
     drop:
     - ALL
+    {{- with .Values.container.capabilities }}
+    {{- if .add }}
     add:
-    - NET_BIND_SERVICE
-    - SYS_TIME
+    {{- toYaml .add | nindent 4 }}
+    {{- end }}
+    {{- end }}
   seccompProfile:
     type: RuntimeDefault
 resources:

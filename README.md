@@ -160,10 +160,32 @@ container:
   args: <list of strings>
   readOnlyRootFilesystem: <boolean>
   allowPrivilegeEscalation: <boolean>
+  capabilities:
+    add: <list of strings>
   requestMemory: <string> # if not using resourceTier
   requestCPU: <string> # if not using resourceTier
   limitMemory: <string> # if not using resourceTier
   limitCPU: <string> # if not using resourceTier
+```
+
+All containers always `drop: ALL` Linux capabilities. By default no capabilities are added, which keeps the container compliant with the restricted Pod Security Standard. A chart only needs to set `container.capabilities.add` when the process genuinely requires a capability, for example binding to a privileged port below 1024:
+
+```yaml
+container:
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+```
+
+This renders as:
+
+```yaml
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+    add:
+    - NET_BIND_SERVICE
 ```
 
 ### Container ConfigMap template
