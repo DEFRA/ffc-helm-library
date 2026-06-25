@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## 5.2.1
+
+Container Linux capabilities are now configurable and default to none.
+`_container.yaml` previously hardcoded `add: [NET_BIND_SERVICE, SYS_TIME]` after `drop: ALL`, which could not be overridden by consuming charts and left unnecessary privileges in the effective capability set.
+Charts that require a specific capability can now opt in via `container.capabilities.add`. When unset, no capabilities are added, satisfying the Kubernetes restricted Pod Security Standard and the "allowed capabilities" cluster policy.
+
+---
+
 ## 5.2.0
 
 Added `enableReloader` option to Deployment, StatefulSet, and CronJob templates.
