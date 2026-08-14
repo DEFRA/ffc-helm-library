@@ -23,6 +23,12 @@ assert_contains() {
   fi
 }
 
+chart_version="$(python3 "$repository_root/scripts/chart-version.py" "$repository_root/ffc-helm-library/Chart.yaml")"
+if [[ ! "$chart_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Unexpected chart version: $chart_version" >&2
+  exit 1
+fi
+
 helm lint "$repository_root/ffc-helm-library"
 HELM_REPOSITORY_CONFIG=/dev/null \
   HELM_REPOSITORY_CACHE="$helm_repository_cache" \

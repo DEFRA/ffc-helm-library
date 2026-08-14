@@ -53,7 +53,7 @@ jobs:
           chart_file="$CHART_DIRECTORY/Chart.yaml"
           test -f "$chart_file"
 
-          version="$(sed -nE 's/^version:[[:space:]]*["'"']?([^"'"'[:space:]#]+).*/\1/p' "$chart_file")"
+          version="$(python3 scripts/chart-version.py "$chart_file")"
           test -n "$version"
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
@@ -102,7 +102,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin "$BASE_REF"
-          previous_version="$(git show "origin/$BASE_REF:$CHART_DIRECTORY/Chart.yaml" | sed -nE 's/^version:[[:space:]]*["'"']?([^"'"'[:space:]#]+).*/\1/p')"
+          previous_version="$(git show "origin/$BASE_REF:$CHART_DIRECTORY/Chart.yaml" | python3 scripts/chart-version.py -)"
           test -n "$previous_version"
 
           python3 - "$previous_version" "$CURRENT_VERSION" <<'PY'
