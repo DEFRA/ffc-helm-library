@@ -1,0 +1,234 @@
+name: Package and publish Helm library
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Package channel; auto detects it from the branch and PR state.
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - alpha
+          - beta
+          - release
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ffc-helm-library/**
+  push:
+    paths:
+      - ffc-helm-library/**
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: helm-library-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  package-and-publish:
+    name: Package and publish chart
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out chart source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Read and validate chart version
+        id: chart
+        env:
+          CHART_DIRECTORY: ffc-helm-library
+        run: |
+          set -euo pipefail
+          chart_file="$CHART_DIRECTORY/Chart.yaml"
+          test -f "$chart_file"
+
+          version="$(sed -nE 's/^version:[[:space:]]*["'"']?([^"'"'[:space:]#]+).*/\1/p' "$chart_file")"
+          test -n "$version"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+          python3 - "$version" <<'PY'
+          import re
+          import sys
+
+          version = sys.argv[1]
+          if not re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", version):
+              raise SystemExit(f"Chart version must be a three-part numeric SemVer: {version}")
+          PY
+
+      - name: Select package channel
+        id: channel
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REQUESTED_CHANNEL: ${{ inputs.channel || 'auto' }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          channel="$REQUESTED_CHANNEL"
+          if [ "$channel" = auto ]; then
+            if [ "$EVENT_NAME" = pull_request ]; then
+              channel=beta
+            elif [ "$REF_NAME" = master ]; then
+              channel=release
+            else
+              open_prs="$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&head=${GITHUB_REPOSITORY_OWNER}:${REF_NAME}" --jq 'length')"
+              if [ "$open_prs" -gt 0 ]; then
+                channel=beta
+              else
+                channel=alpha
+              fi
+            fi
+          fi
+          printf 'channel=%s\n' "$channel" >> "$GITHUB_OUTPUT"
+
+      - name: Validate chart version increment
+        id: version
+        if: github.ref_name != 'master'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'master' }}
+          CHART_DIRECTORY: ffc-helm-library
+          CURRENT_VERSION: ${{ steps.chart.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE_REF"
+          previous_version="$(git show "origin/$BASE_REF:$CHART_DIRECTORY/Chart.yaml" | sed -nE 's/^version:[[:space:]]*["'"']?([^"'"'[:space:]#]+).*/\1/p')"
+          test -n "$previous_version"
+
+          python3 - "$previous_version" "$CURRENT_VERSION" <<'PY'
+          import sys
+
+          def parse(version):
+              try:
+                  parts = tuple(map(int, version.split(".")))
+              except ValueError as error:
+                  raise SystemExit(f"Invalid chart version: {version}") from error
+              if len(parts) != 3:
+                  raise SystemExit(f"Invalid chart version: {version}")
+              return parts
+
+          previous, current = map(parse, sys.argv[1:])
+          if current <= previous:
+              raise SystemExit(
+                  f"Chart version must be greater than {sys.argv[1]}; found {sys.argv[2]}. "
+                  "Update ffc-helm-library/Chart.yaml before continuing."
+              )
+          PY
+          printf 'changed=false\n' >> "$GITHUB_OUTPUT"
+          printf 'version=%s\n' "$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Lint chart
+        if: steps.version.outputs.changed != 'true'
+        run: helm lint ffc-helm-library
+
+      - name: Test chart with a consumer
+        if: steps.version.outputs.changed != 'true'
+        run: bash tests/test-chart.sh
+
+      - name: Package chart
+        id: package
+        if: steps.version.outputs.changed != 'true'
+        env:
+          CHART_DIRECTORY: ffc-helm-library
+          CHART_VERSION: ${{ steps.version.outputs.version || steps.chart.outputs.version }}
+          CHANNEL: ${{ steps.channel.outputs.channel }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/chart-package"
+          if [ "$CHANNEL" = beta ]; then
+            package_version="${CHART_VERSION}-beta"
+          elif [ "$CHANNEL" = release ]; then
+            package_version="$CHART_VERSION"
+          else
+            package_version="${CHART_VERSION}-alpha.${BUILD_NUMBER}"
+          fi
+          if [ "$package_version" = "$CHART_VERSION" ]; then
+            helm package "$CHART_DIRECTORY" --destination "$RUNNER_TEMP/chart-package"
+          else
+            helm package "$CHART_DIRECTORY" --version "$package_version" --destination "$RUNNER_TEMP/chart-package"
+          fi
+          printf 'file=%s/%s-%s.tgz\n' "$RUNNER_TEMP/chart-package" "$(basename "$CHART_DIRECTORY")" "$package_version" >> "$GITHUB_OUTPUT"
+          printf 'version=%s\n' "$package_version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish chart and update index
+        if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED == 'true'
+        env:
+          CHART_FILE: ${{ steps.package.outputs.file }}
+          CHART_REPOSITORY: DEFRA/ffc-helm-repository
+          CHART_REPOSITORY_BRANCH: master
+          CHART_REPOSITORY_URL: https://raw.githubusercontent.com/DEFRA/ffc-helm-repository/master/
+          CHART_VERSION: ${{ steps.package.outputs.version }}
+          HELM_REPOSITORY_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: |
+          set -euo pipefail
+          repository_directory="$RUNNER_TEMP/helm-repository"
+          git clone --branch "$CHART_REPOSITORY_BRANCH" "https://x-access-token:${HELM_REPOSITORY_TOKEN}@github.com/${CHART_REPOSITORY}.git" "$repository_directory"
+          cd "$repository_directory"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          for attempt in 1 2 3; do
+            git fetch origin "$CHART_REPOSITORY_BRANCH"
+            git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
+            cp "$CHART_FILE" .
+            helm repo index . --url "$CHART_REPOSITORY_URL"
+            git add -- "$(basename "$CHART_FILE")" index.yaml
+
+            if git diff --cached --quiet; then
+              echo "Chart $CHART_VERSION is already published."
+              exit 0
+            fi
+
+            git commit -m "Add new version $CHART_VERSION"
+            if git push origin "HEAD:$CHART_REPOSITORY_BRANCH"; then
+              exit 0
+            fi
+
+            git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
+            if [ "$attempt" = 3 ]; then
+              echo 'Unable to push the regenerated Helm index after three attempts.' >&2
+              exit 1
+            fi
+          done
+
+      - name: Upload dry-run chart package
+        if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart-${{ steps.package.outputs.version }}
+          path: ${{ steps.package.outputs.file }}
+          if-no-files-found: error
+
+  refresh-open-pull-requests:
+    name: Refresh open chart pull requests
+    if: github.event_name == 'push' && github.ref_name == 'master' && vars.HELM_PUBLISH_ENABLED == 'true'
+    needs: package-and-publish
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+    steps:
+      - name: Re-run chart pull requests against the new master
+        run: |
+          set -euo pipefail
+          pull_requests="$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&base=master&per_page=100" \
+            --jq '.[] | select(.head.repo.full_name == env.GITHUB_REPOSITORY) | [.number, .head.ref] | @tsv')"
+
+          while IFS=$'\t' read -r pr_number head_ref; do
+            [ -n "$pr_number" ] || continue
+            changed_files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$pr_number/files?per_page=100" --jq '.[].filename')"
+            if printf '%s\n' "$changed_files" | grep -q '^ffc-helm-library/'; then
+              echo "Refreshing PR #$pr_number from $head_ref"
+              gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref "$head_ref" -f channel=beta
+            fi
+          done <<< "$pull_requests"

@@ -2,6 +2,45 @@
 
 A Helm library chart that captures general configuration for the FCP Kubernetes platform. It can be used by any FCP microservice Helm chart to import K8s object templates configured to run on the FCP platform.
 
+## Publishing
+
+GitHub Actions packages this chart for pull requests and for merges to `master`.
+Feature branches without an open pull request publish
+`<version>-alpha.<GitHub run number>`. Pull requests publish `<version>-beta`,
+and merges to `master` publish the full version. Feature branches and pull
+requests must set `Chart.yaml` to a version strictly greater than `master`; an
+unchanged or lower version fails the workflow without modifying the branch.
+Packages and the regenerated `index.yaml` are committed to
+[`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
+When `master` advances, open chart pull requests are run again. The workflow
+fails any pull request whose version is no longer greater than `master`, which
+requires the author to rebase and select the next version.
+
+Publishing is disabled by default. In this mode the workflow performs version
+calculation, linting, consumer tests and packaging, then uploads the chart as a
+GitHub Actions artifact without pushing code or changing the Helm repository.
+
+To enable publishing, add the repository secret `FFC_HELM_REPOSITORY_TOKEN` as
+a fine-grained PAT with read/write Actions access to
+`DEFRA/ffc-helm-library` and read/write Contents access to
+`DEFRA/ffc-helm-repository`. Then create the repository Actions variable
+`HELM_PUBLISH_ENABLED` with the value `true`. The workflow uses this token so
+it can update the separate Helm repository and rerun open pull requests after a
+release. A repository-scoped `GITHUB_TOKEN` cannot write to another repository.
+
+Protect `master` by requiring the `Package and publish chart` check with the
+strict "Require branches to be up to date before merging" option, or use a
+merge queue. This prevents a pull request from merging while its version
+validation or beta build is pending.
+
+The pipeline also builds a consumer fixture from `tests/consumer`, renders the
+library templates, checks representative Deployment, Service, scaling, ingress,
+identity, secret and security-context output, and verifies required-value
+validation before publishing any package.
+
+The legacy Jenkins pipeline has been retired; remove its multibranch job before
+merging this workflow so it cannot publish alongside GitHub Actions.
+
 ## Including the library chart
 
 In your microservice Helm chart:

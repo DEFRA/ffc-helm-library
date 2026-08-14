@@ -1,0 +1,48 @@
+image: example/helm-library-consumer:1.0.0
+workloadIdentity: true
+
+labels:
+  component: test
+  version: 1.0.0
+
+azureIdentity:
+  clientID: 00000000-0000-0000-0000-000000000001
+
+containerConfigMap:
+  name: helm-library-consumer
+
+containerSecret:
+  name: helm-library-consumer
+  type: Opaque
+
+container:
+  port: 8080
+  resourceTier: S
+  capabilities:
+    add:
+      - NET_BIND_SERVICE
+
+deployment:
+  replicas: 2
+  minReplicas: 2
+  maxReplicas: 4
+  automountServiceAccountToken: false
+
+ingress:
+  class: nginx
+  endpoint: helm-library-consumer
+  server: example.test
+
+secretProviderClass:
+  azure:
+    keyvaultName: test-key-vault
+    tenantId: 00000000-0000-0000-0000-000000000002
+    objects:
+      - objectName: test-secret
+        objectType: secret
+  secretObjects:
+    - secretName: helm-library-consumer
+      type: Opaque
+      data:
+        - objectName: test-secret
+          key: TEST_SECRET
