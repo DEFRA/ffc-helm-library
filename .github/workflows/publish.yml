@@ -18,9 +18,15 @@ on:
       - master
     paths:
       - ffc-helm-library/**
+      - tests/**
+      - scripts/**
+      - .github/workflows/publish.yml
   push:
     paths:
       - ffc-helm-library/**
+      - tests/**
+      - scripts/**
+      - .github/workflows/publish.yml
 
 permissions:
   contents: read
