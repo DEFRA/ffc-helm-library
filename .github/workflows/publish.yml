@@ -226,7 +226,7 @@ jobs:
           printf 'file=%s/%s-%s.tgz\n' "$RUNNER_TEMP/chart-package" "$(basename "$CHART_DIRECTORY")" "$package_version" >> "$GITHUB_OUTPUT"
           printf 'version=%s\n' "$package_version" >> "$GITHUB_OUTPUT"
 
-      - name: Create Helm repository publication PR
+      - name: Publish chart and update index
         if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED == 'true'
         env:
           CHART_FILE: ${{ steps.package.outputs.file }}
@@ -244,36 +244,43 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-          git fetch origin "$CHART_REPOSITORY_BRANCH"
-          git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
-          cp "$CHART_FILE" .
           index_directory="$RUNNER_TEMP/helm-index"
           mkdir -p "$index_directory"
           cp "$CHART_FILE" "$index_directory/"
-          helm repo index "$index_directory" \
-            --merge "$repository_directory/index.yaml" \
-            --url "$CHART_REPOSITORY_URL"
-          cp "$index_directory/index.yaml" index.yaml
-          git add -- "$(basename "$CHART_FILE")" index.yaml
 
-          if git diff --cached --quiet; then
-            echo "Chart $CHART_VERSION is already published."
-            exit 0
-          fi
+          for attempt in 1 2 3; do
+            git fetch origin "$CHART_REPOSITORY_BRANCH"
+            git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
+            cp "$CHART_FILE" .
+            helm repo index "$index_directory" \
+              --merge "$repository_directory/index.yaml" \
+              --url "$CHART_REPOSITORY_URL"
+            cp "$index_directory/index.yaml" index.yaml
+            git add -- "$(basename "$CHART_FILE")" index.yaml
 
-          git commit -m "Add new version $CHART_VERSION"
-          publish_branch="helm-publish/ffc-helm-library-${CHART_VERSION}-${GITHUB_RUN_ID}"
-          git push origin "HEAD:refs/heads/$publish_branch"
+            if git diff --cached --quiet; then
+              echo "Chart $CHART_VERSION is already published."
+              exit 0
+            fi
 
-          pull_request_url="$(gh pr create \
-            --repo "$CHART_REPOSITORY" \
-            --base "$CHART_REPOSITORY_BRANCH" \
-            --head "$publish_branch" \
-            --title "Add ffc-helm-library $CHART_VERSION" \
-            --body "Published by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
+            git commit -m "Add new version $CHART_VERSION"
+            push_output=''
+            if push_output="$(git push origin "HEAD:$CHART_REPOSITORY_BRANCH" 2>&1)"; then
+              echo "Published chart $CHART_VERSION directly to $CHART_REPOSITORY_BRANCH."
+              exit 0
+            fi
 
-          echo "Created publication pull request: $pull_request_url"
-          echo "Review and merge it manually when the chart is ready to publish."
+            push_message="$(printf '%s\n' "$push_output" | tail -n 4 | tr '\n' ' ')"
+            push_message="${push_message//'%'/'%25'}"
+            push_message="${push_message//$'\r'/'%0D'}"
+            push_message="${push_message//$'\n'/'%0A'}"
+            echo "::warning title=Helm repository push rejected::Attempt $attempt: $push_message"
+
+            if [ "$attempt" = 3 ]; then
+              echo '::error title=Helm repository publication blocked::Direct publication requires defradigitalci to have bypass permission for the protected master branch.'
+              exit 1
+            fi
+          done
 
       - name: Upload dry-run chart package
         if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED != 'true'

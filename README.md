@@ -15,10 +15,10 @@ When a developer changes the major or minor version, the patch is reset to `0`;
 major/minor downgrades fail the workflow. Packages and the
 regenerated `index.yaml` are committed to
 [`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
-The publishing job uses a short-lived branch and opens a pull request so it
-complies with that repository's protected `master` branch. It never approves or
-merges the publication pull request; a maintainer reviews and merges it manually
-when the package is ready to publish.
+The publishing job commits the package and updated index directly to the Helm
+repository's `master` branch, matching the retired Jenkins behaviour. The
+`defradigitalci` publisher identity must therefore be granted bypass permission
+for that repository's protected `master` branch.
 When `master` advances, open chart pull requests are run again. The workflow
 rebases same-repository branches when conflict-free and recalculates their patch
 version. A rebase conflict fails the workflow for manual resolution.
