@@ -46,6 +46,44 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          token: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN || github.token }}
+
+      - name: Verify publisher token permissions
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo 'FFC_HELM_REPOSITORY_TOKEN is not configured.' >&2
+            exit 1
+          fi
+
+          for repository in DEFRA/ffc-helm-library DEFRA/ffc-helm-repository; do
+            if [ "$(gh api "repos/$repository" --jq '.permissions.push // false')" != true ]; then
+              echo "Publisher token does not have write access to $repository." >&2
+              exit 1
+            fi
+            echo "Publisher token write access confirmed for $repository."
+          done
+
+      # Remove this bootstrap step after the first successful run. Repository
+      # variables cannot consume secrets, so the PAT must create the flag via API.
+      - name: Enable Helm publishing
+        if: vars.HELM_PUBLISH_ENABLED != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: |
+          set -euo pipefail
+          variable_api="repos/$GITHUB_REPOSITORY/actions/variables/HELM_PUBLISH_ENABLED"
+          if gh api --method PATCH "$variable_api" -f name=HELM_PUBLISH_ENABLED -f value=true; then
+            echo 'Updated HELM_PUBLISH_ENABLED=true.'
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/variables" \
+              -f name=HELM_PUBLISH_ENABLED \
+              -f value=true
+            echo 'Created HELM_PUBLISH_ENABLED=true.'
+          fi
+          echo 'The new value applies to the next workflow run.'
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -98,20 +136,36 @@ jobs:
           fi
           printf 'channel=%s\n' "$channel" >> "$GITHUB_OUTPUT"
 
-      - name: Validate chart version increment
+      - name: Prepare chart version
         id: version
         if: github.ref_name != 'master'
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref || 'master' }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
           CHART_DIRECTORY: ffc-helm-library
           CURRENT_VERSION: ${{ steps.chart.outputs.version }}
+          PUBLISH_ENABLED: ${{ vars.HELM_PUBLISH_ENABLED == 'true' }}
         run: |
           set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin "$BASE_REF"
           previous_version="$(git show "origin/$BASE_REF:$CHART_DIRECTORY/Chart.yaml" | python3 scripts/chart-version.py -)"
           test -n "$previous_version"
 
-          python3 - "$previous_version" "$CURRENT_VERSION" <<'PY'
+          rebased=false
+          if ! git merge-base --is-ancestor "origin/$BASE_REF" HEAD; then
+            echo "Branch is behind $BASE_REF; rebasing before recalculating the chart version."
+            if ! git rebase "origin/$BASE_REF"; then
+              git rebase --abort
+              echo 'Automatic rebase failed. Resolve the conflict and push the rebased branch.' >&2
+              exit 1
+            fi
+            CURRENT_VERSION="$(python3 scripts/chart-version.py "$CHART_DIRECTORY/Chart.yaml")"
+            rebased=true
+          fi
+
+          resolved_version="$(python3 - "$previous_version" "$CURRENT_VERSION" <<'PY'
           import sys
 
           def parse(version):
@@ -124,14 +178,60 @@ jobs:
               return parts
 
           previous, current = map(parse, sys.argv[1:])
-          if current <= previous:
+          if current[:2] != previous[:2]:
               raise SystemExit(
-                  f"Chart version must be greater than {sys.argv[1]}; found {sys.argv[2]}. "
-                  "Update ffc-helm-library/Chart.yaml before continuing."
+                  f"Chart version must remain on {previous[0]}.{previous[1]}.x; "
+                  f"found {sys.argv[2]}"
               )
+          if current <= previous:
+              print(f"{previous[0]}.{previous[1]}.{previous[2] + 1}")
+          else:
+              print(sys.argv[2])
           PY
-          printf 'changed=false\n' >> "$GITHUB_OUTPUT"
-          printf 'version=%s\n' "$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          )"
+
+          version_changed=false
+          if [ "$resolved_version" != "$CURRENT_VERSION" ]; then
+            python3 - "$CHART_DIRECTORY/Chart.yaml" "$CURRENT_VERSION" "$resolved_version" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          chart_file, old_version, new_version = sys.argv[1:]
+          path = Path(chart_file)
+          contents = path.read_text(encoding="utf-8")
+          pattern = re.compile(r"^(\s*version:\s*)(['\"]?)([^'\"\s#]+)(['\"]?)(.*)$", re.MULTILINE)
+
+          def replace(match):
+              if match.group(3) != old_version:
+                  return match.group(0)
+              if match.group(2) != match.group(4):
+                  raise SystemExit("Chart version has mismatched quotes")
+              return f"{match.group(1)}{match.group(2)}{new_version}{match.group(4)}{match.group(5)}"
+
+          updated, substitutions = pattern.subn(replace, contents, count=1)
+          if substitutions != 1 or updated == contents:
+              raise SystemExit("Unable to update Chart.yaml version")
+          path.write_text(updated, encoding="utf-8")
+          PY
+            version_changed=true
+          fi
+
+          if { [ "$version_changed" = true ] || [ "$rebased" = true ]; } && [ "$PUBLISH_ENABLED" = true ]; then
+            if [ "$version_changed" = true ]; then
+              git add -- "$CHART_DIRECTORY/Chart.yaml"
+              git commit -m "Bump chart version to $resolved_version"
+            fi
+            git push --force-with-lease origin "HEAD:$HEAD_REF"
+            printf 'changed=true\n' >> "$GITHUB_OUTPUT"
+          else
+            if [ "$version_changed" = true ] || [ "$rebased" = true ]; then
+              echo "Dry run: would update $HEAD_REF to chart version $resolved_version."
+            fi
+            printf 'changed=false\n' >> "$GITHUB_OUTPUT"
+          fi
+
+          printf 'version=%s\n' "$resolved_version" >> "$GITHUB_OUTPUT"
 
       - name: Lint chart
         if: steps.version.outputs.changed != 'true'

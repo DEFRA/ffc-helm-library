@@ -8,13 +8,14 @@ GitHub Actions packages this chart for pull requests and for merges to `master`.
 Feature branches without an open pull request publish
 `<version>-alpha.<GitHub run number>`. Pull requests publish `<version>-beta`,
 and merges to `master` publish the full version. Feature branches and pull
-requests must set `Chart.yaml` to a version strictly greater than `master`; an
-unchanged or lower version fails the workflow without modifying the branch.
-Packages and the regenerated `index.yaml` are committed to
+requests automatically move to the next patch version when their version is not
+greater than `master`; explicit higher `5.2.x` patch versions are preserved, but
+the workflow rejects a move to another minor release. Packages and the
+regenerated `index.yaml` are committed to
 [`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
 When `master` advances, open chart pull requests are run again. The workflow
-fails any pull request whose version is no longer greater than `master`, which
-requires the author to rebase and select the next version.
+rebases same-repository branches when conflict-free and recalculates their patch
+version. A rebase conflict fails the workflow for manual resolution.
 
 Publishing is disabled by default. In this mode the workflow performs version
 calculation, linting, consumer tests and packaging, then uploads the chart as a
