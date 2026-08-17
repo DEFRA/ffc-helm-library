@@ -15,10 +15,10 @@ When a developer changes the major or minor version, the patch is reset to `0`;
 major/minor downgrades fail the workflow. Packages and the
 regenerated `index.yaml` are committed to
 [`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
-The publishing job uses a short-lived branch and pull request so it complies
-with that repository's protected `master` branch, then merges and deletes the
-publication branch automatically. The publisher identity must have permission
-to perform an admin/bypass merge for this dedicated publication pull request.
+The publishing job uses a short-lived branch and opens a pull request so it
+complies with that repository's protected `master` branch. It never approves or
+merges the publication pull request; a maintainer reviews and merges it manually
+when the package is ready to publish.
 When `master` advances, open chart pull requests are run again. The workflow
 rebases same-repository branches when conflict-free and recalculates their patch
 version. A rebase conflict fails the workflow for manual resolution.

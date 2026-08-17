@@ -226,7 +226,7 @@ jobs:
           printf 'file=%s/%s-%s.tgz\n' "$RUNNER_TEMP/chart-package" "$(basename "$CHART_DIRECTORY")" "$package_version" >> "$GITHUB_OUTPUT"
           printf 'version=%s\n' "$package_version" >> "$GITHUB_OUTPUT"
 
-      - name: Publish chart and update index
+      - name: Create Helm repository publication PR
         if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED == 'true'
         env:
           CHART_FILE: ${{ steps.package.outputs.file }}
@@ -243,44 +243,6 @@ jobs:
           cd "$repository_directory"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-          merge_method="$(gh api "repos/$CHART_REPOSITORY" --jq '
-            if .allow_merge_commit then "merge"
-            elif .allow_squash_merge then "squash"
-            elif .allow_rebase_merge then "rebase"
-            else error("No pull request merge method is enabled")
-            end')"
-
-          merge_publication_pull_request() {
-            pull_request="$1"
-            if gh pr merge "$pull_request" \
-              --repo "$CHART_REPOSITORY" \
-              "--$merge_method" \
-              --delete-branch; then
-              return 0
-            fi
-            gh pr merge "$pull_request" \
-              --repo "$CHART_REPOSITORY" \
-              "--$merge_method" \
-              --admin \
-              --delete-branch
-          }
-
-          publisher="$(gh api user --jq .login)"
-          pending_pull_requests="$(gh pr list \
-            --repo "$CHART_REPOSITORY" \
-            --state open \
-            --json url,headRefName,author \
-            --jq ".[] | select(.author.login == \"$publisher\" and (.headRefName | startswith(\"helm-publish/ffc-helm-library-\"))) | .url")"
-
-          while IFS= read -r pending_pull_request; do
-            [ -n "$pending_pull_request" ] || continue
-            echo "Completing pending publication $pending_pull_request."
-            if ! merge_publication_pull_request "$pending_pull_request"; then
-              echo "::error title=Pending Helm publication requires attention::$pending_pull_request needs a review or the $publisher identity must be added to the target branch bypass list."
-              exit 1
-            fi
-          done <<< "$pending_pull_requests"
 
           git fetch origin "$CHART_REPOSITORY_BRANCH"
           git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
@@ -310,12 +272,8 @@ jobs:
             --title "Add ffc-helm-library $CHART_VERSION" \
             --body "Published by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
 
-          if ! merge_publication_pull_request "$pull_request_url"; then
-            echo "::error title=Helm publication PR requires attention::$pull_request_url could not be merged automatically. Complete its required review or checks."
-            exit 1
-          fi
-
-          echo "Published chart $CHART_VERSION through $pull_request_url."
+          echo "Created publication pull request: $pull_request_url"
+          echo "Review and merge it manually when the chart is ready to publish."
 
       - name: Upload dry-run chart package
         if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED != 'true'
