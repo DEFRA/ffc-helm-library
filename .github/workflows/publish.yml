@@ -58,6 +58,9 @@ jobs:
             exit 1
           fi
 
+          publisher="$(gh api user --jq .login)"
+          echo "::notice title=Helm publisher identity::Authenticated as $publisher"
+
           for repository in DEFRA/ffc-helm-library DEFRA/ffc-helm-repository; do
             if [ "$(gh api "repos/$repository" --jq '.permissions.push // false')" != true ]; then
               echo "Publisher token does not have write access to $repository." >&2
@@ -256,11 +259,11 @@ jobs:
           CHART_REPOSITORY_BRANCH: master
           CHART_REPOSITORY_URL: https://raw.githubusercontent.com/DEFRA/ffc-helm-repository/master/
           CHART_VERSION: ${{ steps.package.outputs.version }}
-          HELM_REPOSITORY_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
         run: |
           set -euo pipefail
           repository_directory="$RUNNER_TEMP/helm-repository"
-          git clone --branch "$CHART_REPOSITORY_BRANCH" "https://x-access-token:${HELM_REPOSITORY_TOKEN}@github.com/${CHART_REPOSITORY}.git" "$repository_directory"
+          gh repo clone "$CHART_REPOSITORY" "$repository_directory" -- --branch "$CHART_REPOSITORY_BRANCH"
           cd "$repository_directory"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -278,13 +281,20 @@ jobs:
             fi
 
             git commit -m "Add new version $CHART_VERSION"
-            if git push origin "HEAD:$CHART_REPOSITORY_BRANCH"; then
+            push_output=''
+            if push_output="$(git push origin "HEAD:$CHART_REPOSITORY_BRANCH" 2>&1)"; then
               exit 0
             fi
 
+            push_message="$(printf '%s\n' "$push_output" | tail -n 4 | tr '\n' ' ')"
+            push_message="${push_message//'%'/'%25'}"
+            push_message="${push_message//$'\r'/'%0D'}"
+            push_message="${push_message//$'\n'/'%0A'}"
+            echo "::warning title=Helm repository push rejected::Attempt $attempt: $push_message"
+
             git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
             if [ "$attempt" = 3 ]; then
-              echo 'Unable to push the regenerated Helm index after three attempts.' >&2
+              echo '::error title=Helm repository publication blocked::The PAT has repository write access, but the protected master branch rejected all three pushes. Add the publisher identity shown above to the branch/ruleset bypass list.'
               exit 1
             fi
           done
