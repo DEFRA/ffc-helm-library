@@ -37,18 +37,18 @@ assert_rejected 5.2.1 4.9.9
 assert_rejected 5.2.1 5.2
 
 helm package "$repository_root/ffc-helm-library" \
-  --version 5.2.2-alpha-42 \
+  --version 5.2.2-alpha.42 \
   --destination "$temporary_directory" >/dev/null
 helm package "$repository_root/ffc-helm-library" \
-  --version 5.2.2-beta-42 \
+  --version 5.2.2-beta.42 \
   --destination "$temporary_directory" >/dev/null
 helm package "$repository_root/ffc-helm-library" \
   --version 5.2.2 \
   --destination "$temporary_directory" >/dev/null
 
 for package in \
-  ffc-helm-library-5.2.2-alpha-42.tgz \
-  ffc-helm-library-5.2.2-beta-42.tgz \
+  ffc-helm-library-5.2.2-alpha.42.tgz \
+  ffc-helm-library-5.2.2-beta.42.tgz \
   ffc-helm-library-5.2.2.tgz; do
   test -f "$temporary_directory/$package"
 done

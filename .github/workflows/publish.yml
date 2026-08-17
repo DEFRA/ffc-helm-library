@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: Package channel; auto detects it from the branch and PR state.
+        description: Package channel; auto selects from the event and branch.
         required: false
         default: auto
         type: choice
@@ -16,11 +16,9 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - ffc-helm-library/**
-      - tests/**
-      - scripts/**
-      - .github/workflows/publish.yml
+  merge_group:
+    types:
+      - checks_requested
   push:
     paths:
       - ffc-helm-library/**
@@ -41,284 +39,135 @@ jobs:
     name: Decide whether to build
     runs-on: ubuntu-24.04
     outputs:
-      should_run: ${{ steps.decision.outputs.should_run }}
+      should_build: ${{ steps.decision.outputs.should_build }}
     steps:
-      - name: Skip branch alpha when an open PR will build beta
+      - name: Check out pipeline scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Decide whether this event needs a chart build
         id: decision
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          should_run=true
-
-          if [ "$EVENT_NAME" = push ] && [ "$REF_NAME" != master ]; then
-            open_pr_count="$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
-              -f state=open \
-              -f base=master \
-              -f "head=$REPOSITORY_OWNER:$REF_NAME" \
-              -f per_page=1 \
-              --jq 'length')"
-
-            if [ "$open_pr_count" -gt 0 ]; then
-              should_run=false
-              echo "::notice title=Alpha build skipped::$REF_NAME has an open pull request targeting master; its pull_request workflow publishes beta."
-            fi
-          fi
-
-          printf 'should_run=%s\n' "$should_run" >> "$GITHUB_OUTPUT"
+        run: bash scripts/decide-build.sh
 
   package-and-publish:
     name: Package and publish chart
     needs: decide-build
-    if: needs.decide-build.outputs.should_run == 'true'
     runs-on: ubuntu-24.04
     steps:
+      - name: No chart build required
+        if: needs.decide-build.outputs.should_build != 'true'
+        run: echo 'No chart or pipeline files require validation for this event.'
+
       - name: Check out chart source
+        if: needs.decide-build.outputs.should_build == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          token: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN || github.token }}
 
       - name: Verify publisher token permissions
+        if: needs.decide-build.outputs.should_build == 'true' && github.event_name != 'merge_group'
         env:
           GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "$GH_TOKEN" ]; then
-            echo 'FFC_HELM_REPOSITORY_TOKEN is not configured.' >&2
-            exit 1
-          fi
-
-          publisher="$(gh api user --jq .login)"
-          echo "::notice title=Helm publisher identity::Authenticated as $publisher"
-
-          for repository in DEFRA/ffc-helm-library DEFRA/ffc-helm-repository; do
-            if [ "$(gh api "repos/$repository" --jq '.permissions.push // false')" != true ]; then
-              echo "Publisher token does not have write access to $repository." >&2
-              exit 1
-            fi
-            echo "Publisher token write access confirmed for $repository."
-          done
+          PUBLISHER_REPOSITORIES: DEFRA/ffc-helm-library DEFRA/ffc-helm-repository
+        run: bash scripts/verify-publisher-token.sh
 
       - name: Set up Helm
+        if: needs.decide-build.outputs.should_build == 'true'
         uses: azure/setup-helm@v4
 
       - name: Read and validate chart version
+        if: needs.decide-build.outputs.should_build == 'true'
         id: chart
         env:
           CHART_DIRECTORY: ffc-helm-library
-        run: |
-          set -euo pipefail
-          chart_file="$CHART_DIRECTORY/Chart.yaml"
-          test -f "$chart_file"
-
-          version="$(python3 scripts/chart-version.py "$chart_file")"
-          test -n "$version"
-          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
-
-          python3 - "$version" <<'PY'
-          import re
-          import sys
-
-          version = sys.argv[1]
-          if not re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", version):
-              raise SystemExit(f"Chart version must be a three-part numeric SemVer: {version}")
-          PY
+        run: bash scripts/validate-chart-version.sh
 
       - name: Select package channel
+        if: needs.decide-build.outputs.should_build == 'true'
         id: channel
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
           REQUESTED_CHANNEL: ${{ inputs.channel || 'auto' }}
-        run: |
-          set -euo pipefail
-          channel="$REQUESTED_CHANNEL"
-          if [ "$channel" = auto ]; then
-            if [ "$EVENT_NAME" = pull_request ]; then
-              channel=beta
-            elif [ "$REF_NAME" = master ]; then
-              channel=release
-            else
-              channel=alpha
-            fi
-          fi
-          printf 'channel=%s\n' "$channel" >> "$GITHUB_OUTPUT"
+        run: bash scripts/select-package-channel.sh
 
       - name: Prepare chart version
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          github.event_name != 'merge_group' &&
+          github.ref_name != 'master'
         id: version
-        if: github.ref_name != 'master'
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref || 'master' }}
           HEAD_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
           CHART_DIRECTORY: ffc-helm-library
           CURRENT_VERSION: ${{ steps.chart.outputs.version }}
           PUBLISH_ENABLED: ${{ vars.HELM_PUBLISH_ENABLED == 'true' }}
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git fetch origin "$BASE_REF"
-          previous_version="$(git show "origin/$BASE_REF:$CHART_DIRECTORY/Chart.yaml" | python3 scripts/chart-version.py -)"
-          test -n "$previous_version"
-
-          rebased=false
-          if ! git merge-base --is-ancestor "origin/$BASE_REF" HEAD; then
-            echo "Branch is behind $BASE_REF; rebasing before recalculating the chart version."
-            if ! git rebase "origin/$BASE_REF"; then
-              git rebase --abort
-              echo 'Automatic rebase failed. Resolve the conflict and push the rebased branch.' >&2
-              exit 1
-            fi
-            CURRENT_VERSION="$(python3 scripts/chart-version.py "$CHART_DIRECTORY/Chart.yaml")"
-            rebased=true
-          fi
-
-          resolved_version="$(python3 scripts/resolve-chart-version.py "$previous_version" "$CURRENT_VERSION")"
-
-          version_changed=false
-          if [ "$resolved_version" != "$CURRENT_VERSION" ]; then
-            python3 - "$CHART_DIRECTORY/Chart.yaml" "$CURRENT_VERSION" "$resolved_version" <<'PY'
-          import re
-          import sys
-          from pathlib import Path
-
-          chart_file, old_version, new_version = sys.argv[1:]
-          path = Path(chart_file)
-          contents = path.read_text(encoding="utf-8")
-          pattern = re.compile(r"^(\s*version:\s*)(['\"]?)([^'\"\s#]+)(['\"]?)(.*)$", re.MULTILINE)
-
-          def replace(match):
-              if match.group(3) != old_version:
-                  return match.group(0)
-              if match.group(2) != match.group(4):
-                  raise SystemExit("Chart version has mismatched quotes")
-              return f"{match.group(1)}{match.group(2)}{new_version}{match.group(4)}{match.group(5)}"
-
-          updated, substitutions = pattern.subn(replace, contents, count=1)
-          if substitutions != 1 or updated == contents:
-              raise SystemExit("Unable to update Chart.yaml version")
-          path.write_text(updated, encoding="utf-8")
-          PY
-            version_changed=true
-          fi
-
-          if { [ "$version_changed" = true ] || [ "$rebased" = true ]; } && [ "$PUBLISH_ENABLED" = true ]; then
-            if [ "$version_changed" = true ]; then
-              git add -- "$CHART_DIRECTORY/Chart.yaml"
-              git commit -m "Bump chart version to $resolved_version"
-            fi
-            git push --force-with-lease origin "HEAD:$HEAD_REF"
-            printf 'changed=true\n' >> "$GITHUB_OUTPUT"
-          else
-            if [ "$version_changed" = true ] || [ "$rebased" = true ]; then
-              echo "Dry run: would update $HEAD_REF to chart version $resolved_version."
-            fi
-            printf 'changed=false\n' >> "$GITHUB_OUTPUT"
-          fi
-
-          printf 'version=%s\n' "$resolved_version" >> "$GITHUB_OUTPUT"
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: bash scripts/prepare-chart-version.sh
 
       - name: Lint chart
-        if: steps.version.outputs.changed != 'true'
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          steps.version.outputs.changed != 'true'
         run: helm lint ffc-helm-library
 
       - name: Test chart with a consumer
-        if: steps.version.outputs.changed != 'true'
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          steps.version.outputs.changed != 'true'
         run: bash tests/test-chart.sh
 
-      - name: Test chart versioning and package names
-        if: steps.version.outputs.changed != 'true'
-        run: bash tests/test-versioning.sh
+      - name: Test chart versioning and pipeline scripts
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          steps.version.outputs.changed != 'true'
+        run: bash tests/test-pipeline.sh
 
       - name: Package chart
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true'
         id: package
-        if: steps.version.outputs.changed != 'true'
         env:
           CHART_DIRECTORY: ffc-helm-library
           CHART_VERSION: ${{ steps.version.outputs.version || steps.chart.outputs.version }}
           CHANNEL: ${{ steps.channel.outputs.channel }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/chart-package"
-          if [ "$CHANNEL" = beta ]; then
-            package_version="${CHART_VERSION}-beta-${BUILD_NUMBER}"
-          elif [ "$CHANNEL" = release ]; then
-            package_version="$CHART_VERSION"
-          else
-            package_version="${CHART_VERSION}-alpha-${BUILD_NUMBER}"
-          fi
-          if [ "$package_version" = "$CHART_VERSION" ]; then
-            helm package "$CHART_DIRECTORY" --destination "$RUNNER_TEMP/chart-package"
-          else
-            helm package "$CHART_DIRECTORY" --version "$package_version" --destination "$RUNNER_TEMP/chart-package"
-          fi
-          printf 'file=%s/%s-%s.tgz\n' "$RUNNER_TEMP/chart-package" "$(basename "$CHART_DIRECTORY")" "$package_version" >> "$GITHUB_OUTPUT"
-          printf 'version=%s\n' "$package_version" >> "$GITHUB_OUTPUT"
+        run: bash scripts/package-chart.sh
 
       - name: Publish chart and update index
-        if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED == 'true'
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true' &&
+          vars.HELM_PUBLISH_ENABLED == 'true'
         env:
           CHART_FILE: ${{ steps.package.outputs.file }}
+          CHART_NAME: ${{ steps.package.outputs.name }}
           CHART_REPOSITORY: DEFRA/ffc-helm-repository
           CHART_REPOSITORY_BRANCH: master
           CHART_REPOSITORY_URL: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
           CHART_VERSION: ${{ steps.package.outputs.version }}
           GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
-        run: |
-          set -euo pipefail
-          repository_directory="$RUNNER_TEMP/helm-repository"
-          gh auth setup-git
-          gh repo clone "$CHART_REPOSITORY" "$repository_directory" -- --branch "$CHART_REPOSITORY_BRANCH"
-          cd "$repository_directory"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-          index_directory="$RUNNER_TEMP/helm-index"
-          mkdir -p "$index_directory"
-          cp "$CHART_FILE" "$index_directory/"
-
-          for attempt in 1 2 3; do
-            git fetch origin "$CHART_REPOSITORY_BRANCH"
-            git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
-            cp "$CHART_FILE" .
-            helm repo index "$index_directory" \
-              --merge "$repository_directory/index.yaml" \
-              --url "$CHART_REPOSITORY_URL"
-            cp "$index_directory/index.yaml" index.yaml
-            git add -- "$(basename "$CHART_FILE")" index.yaml
-
-            if git diff --cached --quiet; then
-              echo "Chart $CHART_VERSION is already published."
-              exit 0
-            fi
-
-            git commit -m "Add new version $CHART_VERSION"
-            push_output=''
-            if push_output="$(git push origin "HEAD:$CHART_REPOSITORY_BRANCH" 2>&1)"; then
-              echo "Published chart $CHART_VERSION directly to $CHART_REPOSITORY_BRANCH."
-              exit 0
-            fi
-
-            push_message="$(printf '%s\n' "$push_output" | tail -n 4 | tr '\n' ' ')"
-            push_message="${push_message//'%'/'%25'}"
-            push_message="${push_message//$'\r'/'%0D'}"
-            push_message="${push_message//$'\n'/'%0A'}"
-            echo "::warning title=Helm repository push rejected::Attempt $attempt: $push_message"
-
-            if [ "$attempt" = 3 ]; then
-              echo '::error title=Helm repository publication blocked::Direct publication requires defradigitalci to have bypass permission for the protected master branch.'
-              exit 1
-            fi
-          done
+        run: bash scripts/publish-chart.sh
 
       - name: Upload dry-run chart package
-        if: steps.version.outputs.changed != 'true' && vars.HELM_PUBLISH_ENABLED != 'true'
+        if: >-
+          needs.decide-build.outputs.should_build == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true' &&
+          vars.HELM_PUBLISH_ENABLED != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: helm-chart-${{ steps.package.outputs.version }}
@@ -327,23 +176,19 @@ jobs:
 
   refresh-open-pull-requests:
     name: Refresh open chart pull requests
-    if: github.event_name == 'push' && github.ref_name == 'master' && vars.HELM_PUBLISH_ENABLED == 'true'
+    if: >-
+      github.event_name == 'push' &&
+      github.ref_name == 'master' &&
+      vars.HELM_PUBLISH_ENABLED == 'true'
     needs: package-and-publish
     runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
     steps:
-      - name: Re-run chart pull requests against the new master
-        run: |
-          set -euo pipefail
-          pull_requests="$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&base=master&per_page=100" \
-            --jq '.[] | select(.head.repo.full_name == env.GITHUB_REPOSITORY) | [.number, .head.ref] | @tsv')"
+      - name: Check out pipeline scripts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-          while IFS=$'\t' read -r pr_number head_ref; do
-            [ -n "$pr_number" ] || continue
-            changed_files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$pr_number/files?per_page=100" --jq '.[].filename')"
-            if printf '%s\n' "$changed_files" | grep -q '^ffc-helm-library/'; then
-              echo "Refreshing PR #$pr_number from $head_ref"
-              gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref "$head_ref" -f channel=beta
-            fi
-          done <<< "$pull_requests"
+      - name: Re-run chart pull requests against the new master
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: bash scripts/refresh-open-pull-requests.sh

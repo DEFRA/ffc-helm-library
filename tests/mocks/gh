@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ "${1:-}" = api ] && [ "${2:-}" = user ]; then
+  printf '%s\n' "${MOCK_PUBLISHER_LOGIN:-defradigitalci}"
+  exit 0
+fi
+
+if [ "${1:-}" = api ]; then
+  shift
+  endpoint=''
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --paginate)
+        shift
+        ;;
+      --method|-f|--jq)
+        shift 2
+        ;;
+      *)
+        endpoint="$1"
+        break
+        ;;
+    esac
+  done
+
+  if [[ "$endpoint" == */files\?* ]]; then
+    printf '%s\n' "${MOCK_CHANGED_FILES:-${MOCK_GH_OUTPUT:-}}"
+  elif [[ "$endpoint" == *'/pulls?'* ]]; then
+    printf '%s\n' "${MOCK_PULL_REQUESTS:-${MOCK_GH_OUTPUT:-}}"
+  elif [[ "$endpoint" == */pulls ]]; then
+    printf '%s\n' "${MOCK_OPEN_PR_COUNT:-${MOCK_GH_OUTPUT:-0}}"
+  elif [[ "$endpoint" == repos/* ]]; then
+    if [ "$endpoint" = "repos/${MOCK_DENIED_REPOSITORY:-}" ]; then
+      printf 'false\n'
+    else
+      printf 'true\n'
+    fi
+  else
+    printf '%s\n' "${MOCK_GH_OUTPUT:-}"
+  fi
+  exit 0
+fi
+
+if [ "${1:-}" = auth ] && [ "${2:-}" = setup-git ]; then
+  exit 0
+fi
+
+if [ "${1:-}" = repo ] && [ "${2:-}" = clone ]; then
+  : "${MOCK_GH_CLONE_SOURCE:?MOCK_GH_CLONE_SOURCE is required}"
+  destination="${4:?Clone destination is required}"
+  branch=master
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = --branch ]; then
+      branch="${2:?Clone branch is required}"
+      break
+    fi
+    shift
+  done
+  git clone --quiet --branch "$branch" "$MOCK_GH_CLONE_SOURCE" "$destination"
+  exit 0
+fi
+
+if [ "${1:-}" = workflow ] && [ "${2:-}" = run ]; then
+  : "${MOCK_GH_LOG:?MOCK_GH_LOG is required}"
+  printf '%s\n' "$*" >> "$MOCK_GH_LOG"
+  exit 0
+fi
+
+echo "Unexpected mocked gh invocation: $*" >&2
+exit 1

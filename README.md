@@ -8,8 +8,8 @@ For a step-by-step explanation aimed at developers new to GitHub Actions, see
 [GitHub Actions Helm publishing pipeline](GITHUB_ACTIONS_PIPELINE.md).
 
 GitHub Actions packages this chart for pull requests and for merges to `master`.
-Feature branch pushes publish `<version>-alpha-<GitHub run number>`.
-Pull requests publish `<version>-beta-<GitHub run number>`,
+Feature branch pushes publish `<version>-alpha.<GitHub run number>`.
+Pull requests publish `<version>-beta.<GitHub run number>`,
 and merges to `master` publish the full version. Feature branches always use the
 alpha channel until they have an open pull request targeting `master`; later
 branch-push alpha builds are skipped because the pull request event builds beta.
