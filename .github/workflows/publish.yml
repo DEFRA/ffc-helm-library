@@ -232,7 +232,7 @@ jobs:
           CHART_FILE: ${{ steps.package.outputs.file }}
           CHART_REPOSITORY: DEFRA/ffc-helm-repository
           CHART_REPOSITORY_BRANCH: master
-          CHART_REPOSITORY_URL: https://raw.githubusercontent.com/DEFRA/ffc-helm-repository/master/
+          CHART_REPOSITORY_URL: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
           CHART_VERSION: ${{ steps.package.outputs.version }}
           GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
         run: |
@@ -251,6 +251,21 @@ jobs:
             else error("No pull request merge method is enabled")
             end')"
 
+          merge_publication_pull_request() {
+            pull_request="$1"
+            if gh pr merge "$pull_request" \
+              --repo "$CHART_REPOSITORY" \
+              "--$merge_method" \
+              --delete-branch; then
+              return 0
+            fi
+            gh pr merge "$pull_request" \
+              --repo "$CHART_REPOSITORY" \
+              "--$merge_method" \
+              --admin \
+              --delete-branch
+          }
+
           publisher="$(gh api user --jq .login)"
           pending_pull_requests="$(gh pr list \
             --repo "$CHART_REPOSITORY" \
@@ -261,17 +276,22 @@ jobs:
           while IFS= read -r pending_pull_request; do
             [ -n "$pending_pull_request" ] || continue
             echo "Completing pending publication $pending_pull_request."
-            gh pr merge "$pending_pull_request" \
-              --repo "$CHART_REPOSITORY" \
-              "--$merge_method" \
-              --admin \
-              --delete-branch
+            if ! merge_publication_pull_request "$pending_pull_request"; then
+              echo "::error title=Pending Helm publication requires attention::$pending_pull_request needs a review or the $publisher identity must be added to the target branch bypass list."
+              exit 1
+            fi
           done <<< "$pending_pull_requests"
 
           git fetch origin "$CHART_REPOSITORY_BRANCH"
           git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
           cp "$CHART_FILE" .
-          helm repo index . --url "$CHART_REPOSITORY_URL"
+          index_directory="$RUNNER_TEMP/helm-index"
+          mkdir -p "$index_directory"
+          cp "$CHART_FILE" "$index_directory/"
+          helm repo index "$index_directory" \
+            --merge "$repository_directory/index.yaml" \
+            --url "$CHART_REPOSITORY_URL"
+          cp "$index_directory/index.yaml" index.yaml
           git add -- "$(basename "$CHART_FILE")" index.yaml
 
           if git diff --cached --quiet; then
@@ -290,11 +310,7 @@ jobs:
             --title "Add ffc-helm-library $CHART_VERSION" \
             --body "Published by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
 
-          if ! gh pr merge "$pull_request_url" \
-            --repo "$CHART_REPOSITORY" \
-            "--$merge_method" \
-            --admin \
-            --delete-branch; then
+          if ! merge_publication_pull_request "$pull_request_url"; then
             echo "::error title=Helm publication PR requires attention::$pull_request_url could not be merged automatically. Complete its required review or checks."
             exit 1
           fi
