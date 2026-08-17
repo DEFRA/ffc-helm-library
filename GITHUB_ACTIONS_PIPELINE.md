@@ -53,7 +53,8 @@ A few terms make the workflow easier to read:
 ```mermaid
 flowchart TD
     A[Push, pull request, or manual run] --> AA{Feature branch push with an open PR?}
-    AA -->|Yes| AB[Skip alpha; pull_request event builds beta]
+    AA -->|Yes| AB[Skip alpha packaging; continue with tests]
+    AB --> B
     AA -->|No| B[Check out the exact source revision]
     B --> C[Validate publisher credentials]
     C --> D[Install Helm and read Chart.yaml]
@@ -69,7 +70,9 @@ flowchart TD
     J -->|No| L[Run lint and tests]
     I --> L
     H --> L
-    L --> M[Package chart]
+    L --> LA{Does this event require a package?}
+    LA -->|No| LB[Publish test summary and JUnit artifact]
+    LA -->|Yes| M[Package chart]
     M --> N{Publishing enabled?}
     N -->|No| O[Upload workflow artifact]
     N -->|Yes| P[Commit package and index directly to Helm repository master]
@@ -103,15 +106,17 @@ start a branch-push workflow because they are outside that path filter.
 
 A pull request targeting `master` always starts the required workflow check.
 The decision script inspects its changed files. A PR that changes the chart,
-tests, scripts or this workflow gets a beta build; a documentation-only PR gets
-a successful no-op check, so branch protection does not leave it pending.
+tests, scripts or this workflow gets a beta build. A documentation-only PR runs
+the complete test framework but skips packaging, so branch protection receives
+a successful current check without publishing an unnecessary beta.
 Opening the PR, pushing another commit, or synchronising it with `master` can
 produce a new PR run.
 
 A push to a branch that already has an open PR can create both a `push` event
-and a `pull_request` event. The **Decide whether to build** job queries GitHub
-for an open PR from that branch targeting `master`. It skips the push event's
-alpha job, while the pull-request event continues and creates one beta package.
+and a `pull_request` event. The **Decide whether to package** job queries GitHub
+for an open PR from that branch targeting `master`. Both events run tests, but
+the push event skips alpha packaging while the pull-request event creates one
+beta package.
 If the PR is closed without being merged, a later branch push can produce alpha
 packages again.
 
@@ -305,8 +310,15 @@ a merge queue).
 
 ## 9. Tests run before packaging
 
-Tests run only after any required source-branch update has completed and the
-new workflow run starts.
+Every workflow run executes the `pytest` framework, including documentation-only
+PRs and branch pushes whose alpha package is suppressed by an open PR. If version
+preparation subsequently updates the source branch, the current run has already
+tested its source commit and skips publication; the new workflow started by the
+push tests the updated commit before packaging.
+
+The framework produces `pytest.xml` in JUnit format. The workflow always adds
+the pass/fail totals to the GitHub job summary and uploads the XML as a
+`test-results-<run>-<attempt>` artifact, including when a test fails.
 
 ### Helm lint
 
@@ -346,6 +358,11 @@ index lookup scripts. It also tests token rejection, branch updates, duplicate
 publication, new publication and PR refresh behavior using a mocked GitHub CLI
 and temporary local Git repositories. It never contacts or changes a real
 repository.
+
+[`tests/test_helm_pipeline.py`](tests/test_helm_pipeline.py) exposes the Helm
+consumer, versioning and pipeline-script suites as individually named `pytest`
+tests. [`tests/test_test_summary.py`](tests/test_test_summary.py) verifies the
+JUnit-to-GitHub-summary reporting.
 
 ## 10. Packaging
 
@@ -432,16 +449,16 @@ is changed to support an explicitly safe, read-only mode.
 
 ## 14. Running the tests locally
 
-Install Helm and Python 3, then run from the repository root:
+Install Helm and Python 3.12, then run from the repository root:
 
 ```bash
-helm lint ffc-helm-library
-bash tests/test-chart.sh
-bash tests/test-pipeline.sh
+python3 -m pip install -r requirements-dev.txt
+bash scripts/run-tests.sh
 ```
 
-The scripts create temporary files and remove the generated consumer dependency
-files when they finish.
+The command prints the named `pytest` results and writes
+`test-results/pytest.xml`. The test scripts create temporary files and remove
+the generated consumer dependency files when they finish.
 
 To inspect only the version decision:
 
@@ -461,7 +478,8 @@ library**, and select the run. Read it in this order:
 3. Find **Select package channel** to confirm alpha, beta or release.
 4. Read **Prepare chart version** for the previous, current and resolved branch
    state, especially when the bot pushed another commit.
-5. Check all three test steps.
+5. Open **Run test framework** and review the **Test results** job summary. The
+   JUnit XML is also available under the run's **Artifacts** section.
 6. Open **Package chart** to see the final package version.
 7. Open **Publish chart and update index**, or **Upload dry-run chart package**,
    depending on the repository variable.
@@ -508,6 +526,9 @@ scripts:
 | --- | --- |
 | `scripts/decide-build.sh` | Detect relevant PR changes and suppress alpha when an open PR will build beta |
 | `scripts/verify-publisher-token.sh` | Validate publisher identity and repository access |
+| `scripts/install-test-dependencies.sh` | Install the pinned `pytest` development dependency |
+| `scripts/run-tests.sh` | Run the framework and generate the JUnit XML report |
+| `scripts/summarize-test-results.py` | Add JUnit totals to the GitHub job summary |
 | `scripts/validate-chart-version.sh` | Read and validate the source SemVer |
 | `scripts/select-package-channel.sh` | Select alpha, beta, release or merge-queue validation |
 | `scripts/prepare-chart-version.sh` | Rebase, resolve the next version, commit and update the source branch |

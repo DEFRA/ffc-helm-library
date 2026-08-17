@@ -63,7 +63,7 @@ test_decision() {
     GITHUB_OUTPUT="$output_file" \
     bash "$repository_root/scripts/decide-build.sh"
 
-  assert_output "should_build=$expected" "$output_file"
+  assert_output "should_package=$expected" "$output_file"
 }
 
 test_channel alpha push feature auto
@@ -86,7 +86,7 @@ test_decision true pull_request 42/merge 42 ffc-helm-library/templates/_deployme
 test_decision false push feature '' 1
 test_decision true push feature '' 0
 test_decision true push master '' ''
-test_decision true merge_group gh-readonly-queue/master/pr-42 '' ''
+test_decision false merge_group gh-readonly-queue/master/pr-42 '' ''
 
 publisher_output="$temporary_directory/publisher-output"
 PATH="$repository_root/tests/mocks:$PATH" \

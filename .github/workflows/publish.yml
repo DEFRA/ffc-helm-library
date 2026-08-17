@@ -36,10 +36,10 @@ concurrency:
 
 jobs:
   decide-build:
-    name: Decide whether to build
+    name: Decide whether to package
     runs-on: ubuntu-24.04
     outputs:
-      should_build: ${{ steps.decision.outputs.should_build }}
+      should_package: ${{ steps.decision.outputs.should_package }}
     steps:
       - name: Check out pipeline scripts
         uses: actions/checkout@v4
@@ -61,38 +61,36 @@ jobs:
     needs: decide-build
     runs-on: ubuntu-24.04
     steps:
-      - name: No chart build required
-        if: needs.decide-build.outputs.should_build != 'true'
-        run: echo 'No chart or pipeline files require validation for this event.'
+      - name: No chart package required
+        if: needs.decide-build.outputs.should_package != 'true'
+        run: echo 'Tests will run, but this event does not require another chart package.'
 
       - name: Check out chart source
-        if: needs.decide-build.outputs.should_build == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Verify publisher token permissions
-        if: needs.decide-build.outputs.should_build == 'true' && github.event_name != 'merge_group'
-        env:
-          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
-          PUBLISHER_REPOSITORIES: DEFRA/ffc-helm-library DEFRA/ffc-helm-repository
-        run: bash scripts/verify-publisher-token.sh
-
       - name: Set up Helm
-        if: needs.decide-build.outputs.should_build == 'true'
         uses: azure/setup-helm@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install test framework
+        run: bash scripts/install-test-dependencies.sh
+
       - name: Read and validate chart version
-        if: needs.decide-build.outputs.should_build == 'true'
         id: chart
         env:
           CHART_DIRECTORY: ffc-helm-library
         run: bash scripts/validate-chart-version.sh
 
       - name: Select package channel
-        if: needs.decide-build.outputs.should_build == 'true'
         id: channel
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -100,9 +98,35 @@ jobs:
           REQUESTED_CHANNEL: ${{ inputs.channel || 'auto' }}
         run: bash scripts/select-package-channel.sh
 
+      - name: Run test framework
+        env:
+          TEST_RESULTS_DIRECTORY: ${{ runner.temp }}/test-results
+        run: bash scripts/run-tests.sh
+
+      - name: Add test results to job summary
+        if: always()
+        env:
+          TEST_RESULTS_FILE: ${{ runner.temp }}/test-results/pytest.xml
+        run: python3 scripts/summarize-test-results.py
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/test-results/pytest.xml
+          if-no-files-found: warn
+
+      - name: Verify publisher token permissions
+        if: needs.decide-build.outputs.should_package == 'true' && github.event_name != 'merge_group'
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+          PUBLISHER_REPOSITORIES: DEFRA/ffc-helm-library DEFRA/ffc-helm-repository
+        run: bash scripts/verify-publisher-token.sh
+
       - name: Prepare chart version
         if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
+          needs.decide-build.outputs.should_package == 'true' &&
           github.event_name != 'merge_group' &&
           github.ref_name != 'master'
         id: version
@@ -115,27 +139,9 @@ jobs:
           GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
         run: bash scripts/prepare-chart-version.sh
 
-      - name: Lint chart
-        if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
-          steps.version.outputs.changed != 'true'
-        run: helm lint ffc-helm-library
-
-      - name: Test chart with a consumer
-        if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
-          steps.version.outputs.changed != 'true'
-        run: bash tests/test-chart.sh
-
-      - name: Test chart versioning and pipeline scripts
-        if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
-          steps.version.outputs.changed != 'true'
-        run: bash tests/test-pipeline.sh
-
       - name: Package chart
         if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
+          needs.decide-build.outputs.should_package == 'true' &&
           github.event_name != 'merge_group' &&
           steps.version.outputs.changed != 'true'
         id: package
@@ -148,7 +154,7 @@ jobs:
 
       - name: Publish chart and update index
         if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
+          needs.decide-build.outputs.should_package == 'true' &&
           github.event_name != 'merge_group' &&
           steps.version.outputs.changed != 'true' &&
           vars.HELM_PUBLISH_ENABLED == 'true'
@@ -164,7 +170,7 @@ jobs:
 
       - name: Upload dry-run chart package
         if: >-
-          needs.decide-build.outputs.should_build == 'true' &&
+          needs.decide-build.outputs.should_package == 'true' &&
           github.event_name != 'merge_group' &&
           steps.version.outputs.changed != 'true' &&
           vars.HELM_PUBLISH_ENABLED != 'true'

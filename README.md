@@ -47,7 +47,9 @@ validation or beta build is pending.
 The pipeline also builds a consumer fixture from `tests/consumer`, renders the
 library templates, checks representative Deployment, Service, scaling, ingress,
 identity, secret and security-context output, and verifies required-value
-validation before publishing any package.
+validation before publishing any package. Every workflow run executes these tests
+through `pytest`, adds the totals to the GitHub job summary and uploads the
+JUnit XML report as a workflow artifact.
 
 The legacy Jenkins pipeline has been retired; remove its multibranch job before
 merging this workflow so it cannot publish alongside GitHub Actions.

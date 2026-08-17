@@ -6,7 +6,7 @@ set -euo pipefail
 : "${REF_NAME:?REF_NAME is required}"
 : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
-should_build=true
+should_package=true
 
 if [ "$EVENT_NAME" = pull_request ]; then
   : "${PR_NUMBER:?PR_NUMBER is required for pull requests}"
@@ -19,8 +19,8 @@ if [ "$EVENT_NAME" = pull_request ]; then
   if ! grep -Eq \
     '^(ffc-helm-library/|tests/|scripts/|\.github/workflows/publish\.yml$)' \
     <<< "$changed_files"; then
-    should_build=false
-    echo '::notice title=Chart build skipped::The pull request changes no chart or pipeline files.'
+    should_package=false
+    echo '::notice title=Chart package skipped::The pull request changes no chart or pipeline files; tests will still run.'
   fi
 elif [ "$EVENT_NAME" = push ] && [ "$REF_NAME" != master ]; then
   : "${REPOSITORY_OWNER:?REPOSITORY_OWNER is required for branch pushes}"
@@ -34,9 +34,12 @@ elif [ "$EVENT_NAME" = push ] && [ "$REF_NAME" != master ]; then
     --jq 'length')"
 
   if [ "$open_pr_count" -gt 0 ]; then
-    should_build=false
-    echo "::notice title=Alpha build skipped::$REF_NAME has an open pull request targeting master; its pull_request workflow publishes beta."
+    should_package=false
+    echo "::notice title=Alpha package skipped::$REF_NAME has an open pull request targeting master; tests will run but its pull_request workflow publishes beta."
   fi
+elif [ "$EVENT_NAME" = merge_group ]; then
+  should_package=false
+  echo '::notice title=Chart package skipped::Merge-group commits are validation-only.'
 fi
 
-printf 'should_build=%s\n' "$should_build" >> "$GITHUB_OUTPUT"
+printf 'should_package=%s\n' "$should_package" >> "$GITHUB_OUTPUT"
