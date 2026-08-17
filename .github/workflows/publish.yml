@@ -290,37 +290,6 @@ jobs:
           path: ${{ steps.package.outputs.file }}
           if-no-files-found: error
 
-  open-migration-pull-request:
-    name: Open pl-1421 pull request
-    if: github.event_name == 'push' && github.ref_name == 'pl-1421'
-    needs: package-and-publish
-    runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
-    steps:
-      - name: Open source pull request
-        run: |
-          set -euo pipefail
-          existing_pull_request="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --state open \
-            --base master \
-            --head pl-1421 \
-            --json url \
-            --jq '.[0].url // empty')"
-
-          if [ -n "$existing_pull_request" ]; then
-            echo "Source pull request already exists: $existing_pull_request"
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base master \
-            --head pl-1421 \
-            --title 'PL-1421 Migrate Helm publishing to GitHub Actions' \
-            --body 'Replaces Jenkins Helm packaging and publication with the tested GitHub Actions pipeline. Branch builds publish alpha packages, pull requests publish beta packages, and merges to master publish full releases.'
-
   refresh-open-pull-requests:
     name: Refresh open chart pull requests
     if: github.event_name == 'push' && github.ref_name == 'master' && vars.HELM_PUBLISH_ENABLED == 'true'
