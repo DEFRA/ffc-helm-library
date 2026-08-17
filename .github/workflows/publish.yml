@@ -263,6 +263,7 @@ jobs:
         run: |
           set -euo pipefail
           repository_directory="$RUNNER_TEMP/helm-repository"
+          gh auth setup-git
           gh repo clone "$CHART_REPOSITORY" "$repository_directory" -- --branch "$CHART_REPOSITORY_BRANCH"
           cd "$repository_directory"
           git config user.name 'github-actions[bot]'
@@ -294,7 +295,7 @@ jobs:
 
             git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
             if [ "$attempt" = 3 ]; then
-              echo '::error title=Helm repository publication blocked::The PAT has repository write access, but the protected master branch rejected all three pushes. Add the publisher identity shown above to the branch/ruleset bypass list.'
+              echo '::error title=Helm repository publication blocked::All three pushes were rejected. Check the sanitized Git errors above and the target repository branch rules.'
               exit 1
             fi
           done
