@@ -17,7 +17,8 @@ regenerated `index.yaml` are committed to
 [`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
 The publishing job uses a short-lived branch and pull request so it complies
 with that repository's protected `master` branch, then merges and deletes the
-publication branch automatically.
+publication branch automatically. The publisher identity must have permission
+to perform an admin/bypass merge for this dedicated publication pull request.
 When `master` advances, open chart pull requests are run again. The workflow
 rebases same-repository branches when conflict-free and recalculates their patch
 version. A rebase conflict fails the workflow for manual resolution.

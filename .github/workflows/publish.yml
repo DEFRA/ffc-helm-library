@@ -244,6 +244,30 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
+          merge_method="$(gh api "repos/$CHART_REPOSITORY" --jq '
+            if .allow_merge_commit then "merge"
+            elif .allow_squash_merge then "squash"
+            elif .allow_rebase_merge then "rebase"
+            else error("No pull request merge method is enabled")
+            end')"
+
+          publisher="$(gh api user --jq .login)"
+          pending_pull_requests="$(gh pr list \
+            --repo "$CHART_REPOSITORY" \
+            --state open \
+            --json url,headRefName,author \
+            --jq ".[] | select(.author.login == \"$publisher\" and (.headRefName | startswith(\"helm-publish/ffc-helm-library-\"))) | .url")"
+
+          while IFS= read -r pending_pull_request; do
+            [ -n "$pending_pull_request" ] || continue
+            echo "Completing pending publication $pending_pull_request."
+            gh pr merge "$pending_pull_request" \
+              --repo "$CHART_REPOSITORY" \
+              "--$merge_method" \
+              --admin \
+              --delete-branch
+          done <<< "$pending_pull_requests"
+
           git fetch origin "$CHART_REPOSITORY_BRANCH"
           git reset --hard "origin/$CHART_REPOSITORY_BRANCH"
           cp "$CHART_FILE" .
@@ -266,16 +290,10 @@ jobs:
             --title "Add ffc-helm-library $CHART_VERSION" \
             --body "Published by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")"
 
-          merge_method="$(gh api "repos/$CHART_REPOSITORY" --jq '
-            if .allow_merge_commit then "merge"
-            elif .allow_squash_merge then "squash"
-            elif .allow_rebase_merge then "rebase"
-            else error("No pull request merge method is enabled")
-            end')"
-
           if ! gh pr merge "$pull_request_url" \
             --repo "$CHART_REPOSITORY" \
             "--$merge_method" \
+            --admin \
             --delete-branch; then
             echo "::error title=Helm publication PR requires attention::$pull_request_url could not be merged automatically. Complete its required review or checks."
             exit 1
