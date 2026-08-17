@@ -161,7 +161,7 @@ of cancelling the active run.
 
 ## 3. Checkout
 
-`actions/checkout@v4` downloads the source with full Git history:
+`actions/checkout@v7` downloads the source with full Git history:
 
 ```yaml
 with:
@@ -204,7 +204,7 @@ runs. A normal repository `GITHUB_TOKEN` cannot write to a different repository.
 
 ## 5. Helm setup and source-version validation
 
-`azure/setup-helm@v4` installs Helm on the runner. The next step reads the chart
+`azure/setup-helm@v5` installs Helm on the runner. The next step reads the chart
 version using [`scripts/chart-version.py`](scripts/chart-version.py).
 
 The source version must be exactly three non-negative integers:
@@ -364,6 +364,13 @@ consumer, versioning and pipeline-script suites as individually named `pytest`
 tests. [`tests/test_test_summary.py`](tests/test_test_summary.py) verifies the
 JUnit-to-GitHub-summary reporting.
 
+[`tests/test_bash_functions.py`](tests/test_bash_functions.py) exposes individual
+Bash behaviors as parameterized results instead of hiding all their assertions
+behind one wrapper. Channel selection, packaging decisions, publisher access,
+version validation, package filenames and index lookups therefore appear as
+separate named rows in the pytest and JUnit reports. The full Bash suites remain
+as end-to-end regression cases.
+
 ## 10. Packaging
 
 The package step combines the resolved source version with the selected channel:
@@ -415,7 +422,7 @@ retired Jenkins behaviour.
 ### Dry-run mode
 
 If `HELM_PUBLISH_ENABLED` is not `true`, the package is uploaded to the workflow
-run using `actions/upload-artifact@v4`. It can be downloaded from the run's
+run using `actions/upload-artifact@v7`. It can be downloaded from the run's
 **Artifacts** section. Nothing is pushed to `ffc-helm-repository`.
 
 ## 12. Refreshing open PRs after a release

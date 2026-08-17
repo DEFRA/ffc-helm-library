@@ -42,7 +42,7 @@ jobs:
       should_package: ${{ steps.decision.outputs.should_package }}
     steps:
       - name: Check out pipeline scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -66,17 +66,17 @@ jobs:
         run: echo 'Tests will run, but this event does not require another chart package.'
 
       - name: Check out chart source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip
@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ github.run_number }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/test-results/pytest.xml
@@ -174,7 +174,7 @@ jobs:
           github.event_name != 'merge_group' &&
           steps.version.outputs.changed != 'true' &&
           vars.HELM_PUBLISH_ENABLED != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helm-chart-${{ steps.package.outputs.version }}
           path: ${{ steps.package.outputs.file }}
@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out pipeline scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
