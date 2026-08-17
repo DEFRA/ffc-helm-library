@@ -5,14 +5,19 @@ A Helm library chart that captures general configuration for the FCP Kubernetes 
 ## Publishing
 
 GitHub Actions packages this chart for pull requests and for merges to `master`.
-Feature branches without an open pull request publish
-`<version>-alpha.<GitHub run number>`. Pull requests publish `<version>-beta`,
-and merges to `master` publish the full version. Feature branches and pull
-requests automatically move to the next patch version when their version is not
-greater than `master`; explicit higher `5.2.x` patch versions are preserved, but
-the workflow rejects a move to another minor release. Packages and the
+Feature branch pushes publish `<version>-alpha-<GitHub run number>`.
+Pull requests publish `<version>-beta`,
+and merges to `master` publish the full version. Feature branches always use the
+alpha channel, including when the branch has an open pull request; the separate
+pull request event uses beta. Feature branches and pull requests automatically
+move to the next patch version when their version is not greater than `master`.
+When a developer changes the major or minor version, the patch is reset to `0`;
+major/minor downgrades fail the workflow. Packages and the
 regenerated `index.yaml` are committed to
 [`DEFRA/ffc-helm-repository`](https://github.com/DEFRA/ffc-helm-repository).
+The publishing job uses a short-lived branch and pull request so it complies
+with that repository's protected `master` branch, then merges and deletes the
+publication branch automatically.
 When `master` advances, open chart pull requests are run again. The workflow
 rebases same-repository branches when conflict-free and recalculates their patch
 version. A rebase conflict fails the workflow for manual resolution.
