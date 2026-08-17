@@ -40,7 +40,7 @@ helm package "$repository_root/ffc-helm-library" \
   --version 5.2.2-alpha-42 \
   --destination "$temporary_directory" >/dev/null
 helm package "$repository_root/ffc-helm-library" \
-  --version 5.2.2-beta \
+  --version 5.2.2-beta-42 \
   --destination "$temporary_directory" >/dev/null
 helm package "$repository_root/ffc-helm-library" \
   --version 5.2.2 \
@@ -48,7 +48,7 @@ helm package "$repository_root/ffc-helm-library" \
 
 for package in \
   ffc-helm-library-5.2.2-alpha-42.tgz \
-  ffc-helm-library-5.2.2-beta.tgz \
+  ffc-helm-library-5.2.2-beta-42.tgz \
   ffc-helm-library-5.2.2.tgz; do
   test -f "$temporary_directory/$package"
 done

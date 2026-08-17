@@ -4,12 +4,16 @@ A Helm library chart that captures general configuration for the FCP Kubernetes 
 
 ## Publishing
 
+For a step-by-step explanation aimed at developers new to GitHub Actions, see
+[GitHub Actions Helm publishing pipeline](GITHUB_ACTIONS_PIPELINE.md).
+
 GitHub Actions packages this chart for pull requests and for merges to `master`.
 Feature branch pushes publish `<version>-alpha-<GitHub run number>`.
-Pull requests publish `<version>-beta`,
+Pull requests publish `<version>-beta-<GitHub run number>`,
 and merges to `master` publish the full version. Feature branches always use the
-alpha channel, including when the branch has an open pull request; the separate
-pull request event uses beta. Feature branches and pull requests automatically
+alpha channel until they have an open pull request targeting `master`; later
+branch-push alpha builds are skipped because the pull request event builds beta.
+Feature branches and pull requests automatically
 move to the next patch version when their version is not greater than `master`.
 When a developer changes the major or minor version, the patch is reset to `0`;
 major/minor downgrades fail the workflow. Packages and the

@@ -37,8 +37,43 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  decide-build:
+    name: Decide whether to build
+    runs-on: ubuntu-24.04
+    outputs:
+      should_run: ${{ steps.decision.outputs.should_run }}
+    steps:
+      - name: Skip branch alpha when an open PR will build beta
+        id: decision
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          should_run=true
+
+          if [ "$EVENT_NAME" = push ] && [ "$REF_NAME" != master ]; then
+            open_pr_count="$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+              -f state=open \
+              -f base=master \
+              -f "head=$REPOSITORY_OWNER:$REF_NAME" \
+              -f per_page=1 \
+              --jq 'length')"
+
+            if [ "$open_pr_count" -gt 0 ]; then
+              should_run=false
+              echo "::notice title=Alpha build skipped::$REF_NAME has an open pull request targeting master; its pull_request workflow publishes beta."
+            fi
+          fi
+
+          printf 'should_run=%s\n' "$should_run" >> "$GITHUB_OUTPUT"
+
   package-and-publish:
     name: Package and publish chart
+    needs: decide-build
+    if: needs.decide-build.outputs.should_run == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Check out chart source
@@ -212,7 +247,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/chart-package"
           if [ "$CHANNEL" = beta ]; then
-            package_version="${CHART_VERSION}-beta"
+            package_version="${CHART_VERSION}-beta-${BUILD_NUMBER}"
           elif [ "$CHANNEL" = release ]; then
             package_version="$CHART_VERSION"
           else
