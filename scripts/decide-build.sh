@@ -8,9 +8,17 @@ set -euo pipefail
 
 should_package=true
 
-if [ "$EVENT_NAME" = pull_request ]; then
+if [ "$EVENT_NAME" = pull_request ] || [ "$EVENT_NAME" = pull_request_target ]; then
   : "${PR_NUMBER:?PR_NUMBER is required for pull requests}"
   : "${GH_TOKEN:?GH_TOKEN is required for pull requests}"
+
+  if [ -n "${PR_HEAD_REPOSITORY:-}" ] && \
+    [ "$PR_HEAD_REPOSITORY" != "$GITHUB_REPOSITORY" ]; then
+    should_package=false
+    echo '::notice title=Chart package skipped::Fork pull requests are validation-only and cannot publish or update branches.'
+    printf 'should_package=%s\n' "$should_package" >> "$GITHUB_OUTPUT"
+    exit 0
+  fi
 
   changed_files="$(gh api --paginate \
     "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" \

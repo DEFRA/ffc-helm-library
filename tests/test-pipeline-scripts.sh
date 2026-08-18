@@ -68,6 +68,7 @@ test_decision() {
 
 test_channel alpha push feature auto
 test_channel beta pull_request 42/merge auto
+test_channel beta pull_request_target master auto
 test_channel release push master auto
 test_channel validation merge_group gh-readonly-queue/master/pr-42 auto
 test_channel beta workflow_dispatch feature beta
@@ -83,6 +84,7 @@ fi
 
 test_decision false pull_request 42/merge 42 README.md
 test_decision true pull_request 42/merge 42 ffc-helm-library/templates/_deployment.yaml
+test_decision true pull_request_target master 42 ffc-helm-library/templates/_deployment.yaml
 test_decision false push feature '' 1
 test_decision true push feature '' 0
 test_decision true push master '' ''
@@ -295,8 +297,9 @@ PATH="$repository_root/tests/mocks:$PATH" \
   GITHUB_REPOSITORY=DEFRA/ffc-helm-library \
   bash "$repository_root/scripts/refresh-open-pull-requests.sh"
 assert_contains 'workflow run publish.yml' "$refresh_log"
-assert_contains '--ref feature' "$refresh_log"
+assert_contains '--ref master' "$refresh_log"
 assert_contains 'channel=beta' "$refresh_log"
+assert_contains 'pr_number=42' "$refresh_log"
 
 : > "$refresh_log"
 PATH="$repository_root/tests/mocks:$PATH" \

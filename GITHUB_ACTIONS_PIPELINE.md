@@ -34,9 +34,9 @@ A few terms make the workflow easier to read:
 
 - **Workflow**: the complete automation described by `publish.yml`.
 - **Event**: something that starts the workflow, such as a push or pull request.
-- **Job**: a group of steps executed on a fresh runner. This workflow has a
-  decision job, a packaging job and a job that refreshes open pull requests
-  after a release.
+- **Job**: a group of steps executed on a fresh runner. This workflow has
+  separate decision, test and publication jobs, plus a job that refreshes open
+  pull requests after a release.
 - **Runner**: the temporary Ubuntu machine on which a job runs.
 - **Step**: one action or shell script within a job.
 - **Context**: GitHub-provided data such as `${{ github.ref_name }}` or
@@ -52,32 +52,33 @@ A few terms make the workflow easier to read:
 
 ```mermaid
 flowchart TD
-    A[Push, pull request, or manual run] --> AA{Feature branch push with an open PR?}
+    A[Push, trusted PR event, merge group, or manual run] --> AA{Feature branch push with an open PR?}
     AA -->|Yes| AB[Skip alpha packaging; continue with tests]
     AB --> B
     AA -->|No| B[Check out the exact source revision]
-    B --> C[Validate publisher credentials]
-    C --> D[Install Helm and read Chart.yaml]
-    D --> E{Which event?}
-    E -->|Feature branch push| F[Select alpha]
-    E -->|Pull request| G[Select beta]
-    E -->|master push| H[Select release]
-    F --> I[Compare and prepare version]
-    G --> I
-    I --> J{Branch needs a rebase or version commit?}
-    J -->|Yes, publishing enabled| K[Update source branch and finish this run]
-    K --> A
-    J -->|No| L[Run lint and tests]
-    I --> L
-    H --> L
-    L --> LA{Does this event require a package?}
-    LA -->|No| LB[Publish test summary and JUnit artifact]
-    LA -->|Yes| M[Package chart]
-    M --> N{Publishing enabled?}
-    N -->|No| O[Upload workflow artifact]
-    N -->|Yes| P[Commit package and index directly to Helm repository master]
-    P --> Q{Was this a release from master?}
-    Q -->|Yes| R[Refresh open chart pull requests]
+    B --> C[Install Helm and pytest]
+    C --> D[Validate and test without secrets]
+    D --> E{Does this event require a package?}
+    E -->|No| F[Finish with test summary and JUnit artifact]
+    E -->|Yes| G[Start a fresh publication runner]
+    G --> H[Check out trusted scripts and chart source separately]
+    H --> I[Verify publisher credentials]
+    I --> J{Which channel?}
+    J -->|Feature branch| K[Select alpha]
+    J -->|Pull request| L[Select beta]
+    J -->|master| M[Select release]
+    K --> N[Compare and prepare version]
+    L --> N
+    N --> O{Rebase or version commit required?}
+    O -->|Yes| P[Update source branch and finish publication]
+    P --> A
+    O -->|No| Q[Package chart]
+    M --> Q
+    Q --> R{Publishing enabled?}
+    R -->|No| S[Upload workflow artifact]
+    R -->|Yes| T[Commit package and index to Helm repository master]
+    T --> U{Release from master?}
+    U -->|Yes| V[Refresh open chart pull requests]
 ```
 
 The source-branch update is intentionally a separate pass. After the bot pushes
@@ -104,8 +105,10 @@ start a branch-push workflow because they are outside that path filter.
 
 ### Pull request
 
-A pull request targeting `master` always starts the required workflow check.
-The decision script inspects its changed files. A PR that changes the chart,
+A pull request targeting `master` starts the required workflow through
+`pull_request_target`. GitHub reads the workflow definition and publisher
+scripts from the trusted base commit rather than the pull-request branch. The
+decision script inspects its changed files. A PR that changes the chart,
 tests, scripts or this workflow gets a beta build. A documentation-only PR runs
 the complete test framework but skips packaging, so branch protection receives
 a successful current check without publishing an unnecessary beta.
@@ -113,7 +116,7 @@ Opening the PR, pushing another commit, or synchronising it with `master` can
 produce a new PR run.
 
 A push to a branch that already has an open PR can create both a `push` event
-and a `pull_request` event. The **Decide whether to package** job queries GitHub
+and a `pull_request_target` event. The **Decide whether to package** job queries GitHub
 for an open PR from that branch targeting `master`. Both events run tests, but
 the push event skips alpha packaging while the pull-request event creates one
 beta package.
@@ -147,6 +150,9 @@ library → Run workflow**. Its `channel` input has these choices:
 
 Normally use `auto`. A manual override changes the package name; the workflow
 rejects the `release` channel unless the selected ref is `master`.
+The `pr_number` input is reserved for the automated PR refresh job; developers
+should leave it empty. GitHub shows the **Run workflow** button only after the
+workflow file exists on the default branch.
 
 ## 2. Permissions and concurrency
 
@@ -159,22 +165,27 @@ All runs use the same concurrency group, `helm-library-publish`, with
 to update the Helm repository at exactly the same time. New runs wait instead
 of cancelling the active run.
 
-## 3. Checkout
+## 3. Checkout and trust boundaries
 
-`actions/checkout@v7` downloads the source with full Git history:
+The test job uses `actions/checkout@v7` to download the exact source revision
+with full Git history:
 
 ```yaml
 with:
   fetch-depth: 0
   persist-credentials: false
-  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+  ref: ${{ needs.decide-build.outputs.source_sha }}
 ```
 
 Full history is needed for ancestry checks and rebasing. For a PR, the workflow
-checks out the PR's head commit, not GitHub's synthetic merge commit. This is
-important because the workflow may need to update the real source branch.
-Checkout does not persist a Git credential in the working tree; write steps
-receive their credential only when needed.
+checks out the PR's head commit and runs its tests without repository secrets.
+
+After tests pass, publication starts on a fresh runner. That runner checks out
+publisher scripts from the trusted PR base commit into `trusted/` and chart
+source into `source/`. Once the PAT is provided, only scripts under `trusted/`
+are executed. This prevents PR tests, scripts, workflow YAML and background
+processes from accessing the publisher token. Checkout does not persist a Git
+credential in either working tree.
 
 ## 4. Publisher credential check
 
@@ -185,7 +196,7 @@ The workflow reads the repository secret `FFC_HELM_REPOSITORY_TOKEN` into
 2. Confirm write access to `DEFRA/ffc-helm-library`.
 3. Confirm write access to `DEFRA/ffc-helm-repository`.
 
-This check runs for chart builds before testing even when
+This check runs after successful tests for package-producing events, even when
 `HELM_PUBLISH_ENABLED` is not `true`. It is skipped for documentation-only PRs
 and merge-queue validation. GitHub masks secret values in logs; the workflow
 prints only the authenticated account name and permission result.
@@ -198,9 +209,10 @@ New repository secret**
 Use the exact name `FFC_HELM_REPOSITORY_TOKEN`. Do not put the token in YAML,
 source code, a commit, an issue, or a pull-request comment.
 
-The token needs enough access to push branch changes in `ffc-helm-library`,
-publish to `ffc-helm-repository`, inspect pull requests, and dispatch workflow
-runs. A normal repository `GITHUB_TOKEN` cannot write to a different repository.
+For `ffc-helm-library`, the token needs read/write Contents and Actions access
+plus read-only Pull requests access. For `ffc-helm-repository`, it needs
+read/write Contents access. A normal repository `GITHUB_TOKEN` cannot write to
+a different repository.
 
 ## 5. Helm setup and source-version validation
 
@@ -228,7 +240,7 @@ in `Chart.yaml`.
 With the default `auto` setting, shell logic chooses:
 
 ```text
-pull_request event  -> beta
+pull_request_target -> beta
 merge_group event   -> validation only
 master ref          -> release
 anything else       -> alpha
@@ -280,7 +292,8 @@ workflow:
 1. Updates `Chart.yaml` in the runner.
 2. Creates a `Bump chart version to ...` commit if required.
 3. Pushes the source branch with `--force-with-lease`.
-4. Marks the current run as changed, so testing and publishing steps are skipped.
+4. Marks the publication job as changed, so packaging and publishing are
+   skipped in that pass. Tests have already completed on the original commit.
 
 `--force-with-lease` is used because a rebase rewrites history, but it refuses
 to overwrite a branch that moved unexpectedly on GitHub. The resulting push
@@ -429,13 +442,14 @@ run using `actions/upload-artifact@v7`. It can be downloaded from the run's
 
 The `refresh-open-pull-requests` job runs only after a successful published push
 to `master`. It finds open same-repository PRs targeting `master`, checks which
-ones change `ffc-helm-library/`, and automatically dispatches their workflow
-with the beta channel through the GitHub API. No developer needs to press the
-**Run workflow** button.
+ones change `ffc-helm-library/`, and dispatches `publish.yml` from the trusted
+`master` ref with the PR number and beta channel. The workflow resolves the PR
+head through the GitHub API. It never executes workflow YAML from the feature
+branch, and no developer needs to press the **Run workflow** button.
 
 This is what makes an older open PR recalculate after another PR consumes its
-expected patch version. Fork-based PRs are excluded because the publisher token
-must not push into an untrusted fork.
+expected patch version. Fork-based PRs are validation-only: their tests run
+without secrets, but they cannot publish or receive automatic branch updates.
 
 ## 13. Required repository settings
 
@@ -443,16 +457,15 @@ The production configuration is:
 
 | Type | Name | Purpose |
 | --- | --- | --- |
-| Actions secret | `FFC_HELM_REPOSITORY_TOKEN` | Authenticates branch updates, cross-repository publication and PR refreshes |
+| Actions secret | `FFC_HELM_REPOSITORY_TOKEN` | Library: Contents RW, Actions RW, Pull requests R; Helm repository: Contents RW |
 | Actions variable | `HELM_PUBLISH_ENABLED=true` | Enables Git pushes instead of artifact-only dry runs |
 | Branch protection | Required `Package and publish chart` check | Stops merge when the pipeline fails |
 | Branch protection | Require up-to-date branch or merge queue | Makes stale PRs recalculate before merge |
 | Helm repository rule | Publisher bypass for `master` | Allows direct package/index publication |
 
-Secrets are not normally made available to workflows triggered from forks.
-Consequently, this publishing workflow is designed for branches within the
-DEFRA repository; a fork PR will fail the credential check unless the workflow
-is changed to support an explicitly safe, read-only mode.
+Although `pull_request_target` can access repository secrets, the decision job
+explicitly makes fork PRs validation-only. Their source is tested without
+secrets and the publication job never receives the publisher PAT.
 
 ## 14. Running the tests locally
 
@@ -496,8 +509,9 @@ Common outcomes:
 
 - **A branch workflow did not start**: no configured path changed or Actions
   are disabled. PR checks targeting `master` run even for documentation changes.
-- **A run finishes without test/package steps**: the bot updated the source
-  branch; inspect the new run created by that push.
+- **A run tests successfully but has no package**: the event is validation-only,
+  or the bot updated the source branch; inspect the notice or the new run
+  created by that push.
 - **Credential check fails**: the secret is absent, expired, or lacks access to
   one of the two repositories.
 - **Rebase fails**: update the branch from `master`, resolve conflicts locally,
@@ -531,6 +545,7 @@ scripts:
 
 | Script | Responsibility |
 | --- | --- |
+| `scripts/resolve-source-context.sh` | Resolve source and trusted refs, including safely refreshed PR runs |
 | `scripts/decide-build.sh` | Detect relevant PR changes and suppress alpha when an open PR will build beta |
 | `scripts/verify-publisher-token.sh` | Validate publisher identity and repository access |
 | `scripts/install-test-dependencies.sh` | Install the pinned `pytest` development dependency |

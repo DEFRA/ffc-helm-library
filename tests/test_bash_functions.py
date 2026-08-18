@@ -45,11 +45,19 @@ def output_value(output_file: Path, name: str) -> str:
     [
         ("push", "feature", "auto", "alpha"),
         ("pull_request", "42/merge", "auto", "beta"),
+        ("pull_request_target", "master", "auto", "beta"),
         ("push", "master", "auto", "release"),
         ("merge_group", "gh-readonly-queue/master/pr-42", "auto", "validation"),
         ("workflow_dispatch", "feature", "beta", "beta"),
     ],
-    ids=["alpha", "beta", "release", "merge-validation", "manual-beta"],
+    ids=[
+        "alpha",
+        "beta",
+        "trusted-beta",
+        "release",
+        "merge-validation",
+        "manual-beta",
+    ],
 )
 def test_bash_channel_selection(
     tmp_path: Path,
@@ -86,6 +94,31 @@ def test_bash_release_channel_rejected_outside_master(tmp_path: Path) -> None:
     assert "release channel is allowed only on master" in result.stderr
 
 
+def test_bash_resolves_refreshed_pr_from_trusted_dispatch(tmp_path: Path) -> None:
+    github_output = tmp_path / "github-output"
+    run_script(
+        "resolve-source-context.sh",
+        {
+            "PATH": f"{MOCK_BIN}:{os.environ['PATH']}",
+            "EVENT_NAME": "workflow_dispatch",
+            "REF_NAME": "master",
+            "GITHUB_SHA": "trusted-sha",
+            "REQUESTED_PR_NUMBER": "42",
+            "GH_TOKEN": "test-token",
+            "GITHUB_REPOSITORY": "DEFRA/ffc-helm-library",
+            "MOCK_PR_CONTEXT": (
+                "source-sha\tfeature\tbase-sha\tmaster\t42"
+            ),
+            "GITHUB_OUTPUT": str(github_output),
+        },
+    )
+    assert output_value(github_output, "source_sha") == "source-sha"
+    assert output_value(github_output, "source_ref") == "feature"
+    assert output_value(github_output, "base_ref") == "master"
+    assert output_value(github_output, "pr_number") == "42"
+    assert output_value(github_output, "trusted_ref") == "base-sha"
+
+
 @pytest.mark.parametrize(
     ("event_name", "ref_name", "pr_number", "mock_output", "expected"),
     [
@@ -97,18 +130,28 @@ def test_bash_release_channel_rejected_outside_master(tmp_path: Path) -> None:
             "ffc-helm-library/templates/_deployment.yaml",
             "true",
         ),
+        (
+            "pull_request_target",
+            "master",
+            "42",
+            "ffc-helm-library/templates/_deployment.yaml",
+            "true",
+        ),
         ("push", "feature", "", "1", "false"),
         ("push", "feature", "", "0", "true"),
         ("push", "master", "", "", "true"),
         ("merge_group", "gh-readonly-queue/master/pr-42", "", "", "false"),
+        ("pull_request_target", "master", "42", "ignored", "false"),
     ],
     ids=[
         "documentation-pr",
         "chart-pr",
+        "trusted-chart-pr",
         "branch-with-pr",
         "branch-without-pr",
         "master",
         "merge-group",
+        "fork-pr",
     ],
 )
 def test_bash_package_decision(
@@ -128,6 +171,11 @@ def test_bash_package_decision(
             "EVENT_NAME": event_name,
             "REF_NAME": ref_name,
             "PR_NUMBER": pr_number,
+            "PR_HEAD_REPOSITORY": (
+                "someone/ffc-helm-library"
+                if mock_output == "ignored"
+                else "DEFRA/ffc-helm-library"
+            ),
             "REPOSITORY_OWNER": "DEFRA",
             "GH_TOKEN": "test-token",
             "GITHUB_REPOSITORY": "DEFRA/ffc-helm-library",

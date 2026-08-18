@@ -11,7 +11,7 @@ channel="$REQUESTED_CHANNEL"
 if [ "$channel" = auto ]; then
   if [ "$EVENT_NAME" = merge_group ]; then
     channel=validation
-  elif [ "$EVENT_NAME" = pull_request ]; then
+  elif [ "$EVENT_NAME" = pull_request ] || [ "$EVENT_NAME" = pull_request_target ]; then
     channel=beta
   elif [ "$REF_NAME" = master ]; then
     channel=release

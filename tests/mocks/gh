@@ -25,7 +25,9 @@ if [ "${1:-}" = api ]; then
     esac
   done
 
-  if [[ "$endpoint" == */files\?* ]]; then
+  if [[ "$endpoint" =~ /pulls/[0-9]+$ ]]; then
+    printf '%s\n' "${MOCK_PR_CONTEXT:-${MOCK_GH_OUTPUT:-}}"
+  elif [[ "$endpoint" == */files\?* ]]; then
     printf '%s\n' "${MOCK_CHANGED_FILES:-${MOCK_GH_OUTPUT:-}}"
   elif [[ "$endpoint" == *'/pulls?'* ]]; then
     printf '%s\n' "${MOCK_PULL_REQUESTS:-${MOCK_GH_OUTPUT:-}}"

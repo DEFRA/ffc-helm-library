@@ -27,17 +27,23 @@ When `master` advances, open chart pull requests are run again. The workflow
 rebases same-repository branches when conflict-free and recalculates their patch
 version. A rebase conflict fails the workflow for manual resolution.
 
-Publishing is disabled by default. In this mode the workflow performs version
+When `HELM_PUBLISH_ENABLED` is not exactly `true`, the workflow performs version
 calculation, linting, consumer tests and packaging, then uploads the chart as a
 GitHub Actions artifact without pushing code or changing the Helm repository.
+Package-producing runs still verify the publisher token so configuration errors
+are detected before publishing is enabled.
 
 To enable publishing, add the repository secret `FFC_HELM_REPOSITORY_TOKEN` as
-a fine-grained PAT with read/write Actions access to
-`DEFRA/ffc-helm-library` and read/write Contents access to
-`DEFRA/ffc-helm-repository`. Then create the repository Actions variable
+a fine-grained PAT with read/write Contents and Actions access plus read-only
+Pull requests access to `DEFRA/ffc-helm-library`, and read/write Contents access
+to `DEFRA/ffc-helm-repository`. Then create the repository Actions variable
 `HELM_PUBLISH_ENABLED` with the value `true`. The workflow uses this token so
 it can update the separate Helm repository and rerun open pull requests after a
 release. A repository-scoped `GITHUB_TOKEN` cannot write to another repository.
+Pull requests run from the trusted `master` workflow definition. Tests execute
+untrusted pull-request code without secrets, while publication runs afterward
+on a fresh runner using publisher scripts checked out from the trusted base
+commit. Pull-request-controlled scripts therefore never receive the PAT.
 
 Protect `master` by requiring the `Package and publish chart` check with the
 strict "Require branches to be up to date before merging" option, or use a
@@ -77,7 +83,7 @@ name: ffc-microservice
 version: 1.0.0
 dependencies:
   - name: ffc-helm-library
-    version: 4.1.0
+    version: 5.2.*
     repository: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
 ```
 
@@ -87,7 +93,7 @@ First, follow [the instructions](#including-the-library-chart) for including the
 
 The FCP Helm library chart has been configured using the conventions described in the [Helm library chart documentation](https://helm.sh/docs/topics/library_charts/). The K8s object templates provide settings shared by all objects of that type, which can be augmented with extra settings from the parent (FCP microservice) chart. The library object templates will merge the library and parent templates. In the case where settings are defined in both the library and parent chart, the parent chart settings will take precedence, so library chart settings can be overridden. The library object templates will expect values to be set in the parent `.values.yaml`. Any required values (defined for each template below) that are not provided will result in an error message when processing the template (`helm install`, `helm upgrade`, `helm template`).
 
-The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the K8s object formateted as so:
+The general strategy for using one of the library templates in the parent microservice Helm chart is to create a template for the K8s object formatted as follows:
 
 ```yaml
 {{- include "ffc-helm-library.secret" (list . "ffc-microservice.secret") -}}
@@ -96,7 +102,7 @@ The general strategy for using one of the library templates in the parent micros
 {{- end -}}
 ```
 
-This example would be for `template/secret.yaml` in the `ffc-microservice` Helm chart. The initial `include` statement can be wrapped in an `if` statement if you only wish to create the K8s object based on a condition. E.g., only create the secret is a `pr` value has been set in `values.yaml`:
+This example would be for `templates/secret.yaml` in the `ffc-microservice` Helm chart. The initial `include` statement can be wrapped in an `if` statement if you only wish to create the K8s object based on a condition. For example, create the secret only when a `pr` value has been set in `values.yaml`:
 
 ```yaml
 {{- if .Values.pr }}
@@ -112,7 +118,7 @@ This example would be for `template/secret.yaml` in the `ffc-microservice` Helm 
 - Template file: `_azure-identity.yaml`
 - Template name: `ffc-helm-library.azure-identity`
 
-A K8s `AzureIdentity` object. Must be used in conjunction with the `AzureIdentityBinding` described below. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity`.
+A K8s `AzureIdentity` object. Must be used in conjunction with the `AzureIdentityBinding` described below. The object name is set automatically from the parent chart's `Chart.yaml` name as `<chart-name>-identity`.
 
 A basic usage of this object template would involve the creation of `templates/azure-identity.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
@@ -137,7 +143,7 @@ azureIdentity:
 - Template file: `_azure-identity-binding.yaml`
 - Template name: `ffc-helm-library.azure-identity-binding`
 
-A K8s `AzureIdentityBinding` object. Must be used in conjunction with the `AzureIdentity` described above. The name of the template is set automatically based on the name of the Helm chart (as defined by `name:` in the `values.yaml`) to `<name>-identity-binding`.
+A K8s `AzureIdentityBinding` object. Must be used in conjunction with the `AzureIdentity` described above. The object name is set automatically from the parent chart's `Chart.yaml` name as `<chart-name>-identity-binding`.
 
 A basic usage of this object template would involve the creation of `templates/azure-identity-binding.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
@@ -197,8 +203,26 @@ The following values need to be set in the parent chart's `values.yaml`:
 
 ```yaml
 image: <string>
+```
+
+Container resources can be configured with one of the recognised resource
+tiers:
+
+```yaml
 container:
-  resourceTier: <string> # Allowed values: S, M, L, XL
+  resourceTier: <string> # Recognised values: S, M, L, XL
+```
+
+An unrecognised non-empty tier currently renders the same resources as tier
+`M`; use one of the named tiers so the intended sizing is explicit.
+
+If `resourceTier` is omitted, these explicit resource values are required:
+
+```yaml
+container:
+  requestMemory: <string>
+  requestCpu: <string>
+  limitMemory: <string>
 ```
 
 #### Optional values
@@ -214,10 +238,7 @@ container:
   allowPrivilegeEscalation: <boolean>
   capabilities:
     add: <list of strings>
-  requestMemory: <string> # if not using resourceTier
-  requestCPU: <string> # if not using resourceTier
-  limitMemory: <string> # if not using resourceTier
-  limitCPU: <string> # if not using resourceTier
+  limitCpu: <string> # optional when not using resourceTier
 ```
 
 All containers always `drop: ALL` Linux capabilities. By default no capabilities are added, which keeps the container compliant with the restricted Pod Security Standard. A chart only needs to set `container.capabilities.add` when the process genuinely requires a capability, for example binding to a privileged port below 1024:
@@ -242,16 +263,16 @@ securityContext:
 
 ### Container ConfigMap template
 
-- Template file: `_containter-config-map.yaml`
-- Template name: `ffc-helm-library.containter-config-map`
+- Template file: `_container-config-map.yaml`
+- Template name: `ffc-helm-library.container-config-map`
 
-A K8s `ConfigMap` object object to host non-sensitive container configuration data.
+A K8s `ConfigMap` object to host non-sensitive container configuration data.
 
-A basic usage of this object template would involve the creation of `templates/containter-config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
+A basic usage of this object template would involve the creation of `templates/container-config-map.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the configuration data:
 
 ```yaml
-{{- include "ffc-helm-library.containter-config-map" (list . "ffc-microservice.containter-config-map") -}}
-{{- define "ffc-microservice.containter-config-map" -}}
+{{- include "ffc-helm-library.container-config-map" (list . "ffc-microservice.container-config-map") -}}
+{{- define "ffc-microservice.container-config-map" -}}
 data:
   <key1>: <value1>
   ...
@@ -260,16 +281,16 @@ data:
 
 ### Container Secret template
 
-- Template file: `_containter-secret.yaml`
-- Template name: `ffc-helm-library.containter-secret`
+- Template file: `_container-secret.yaml`
+- Template name: `ffc-helm-library.container-secret`
 
 A K8s `Secret` object to host sensitive data such as a password or token in a container.
 
-A basic usage of this object template would involve the creation of `templates/containter-secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data :
+A basic usage of this object template would involve the creation of `templates/container-secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`), which should include the `data` map containing the sensitive data:
 
 ```yaml
-{{- include "ffc-helm-library.containter-secret" (list . "ffc-microservice.containter-secret") -}}
-{{- define "ffc-microservice.containter-secret" -}}
+{{- include "ffc-helm-library.container-secret" (list . "ffc-microservice.container-secret") -}}
+{{- define "ffc-microservice.container-secret" -}}
 data:
   <key1>: <value1>
   ...
@@ -325,8 +346,10 @@ A K8s `ServiceAccount` object.
 
 A basic usage of this object template would involve the creation of `templates/service-account.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
-A service account is needed when the service needs to use Workload Identity to connect to the resources in Azure
-After adding the service account, `workloadIdentity: true` needs to be added to the `value.yaml` file. By activating Workload Identity, the Pod Identity will be disabled.
+A service account is needed when the service uses Workload Identity to connect
+to resources in Azure. After adding the service account, set
+`workloadIdentity: true` in `values.yaml`. Activating Workload Identity disables
+Pod Identity for the workload.
 
 ```yaml
 {{- include "ffc-helm-library.service-account" (list . "ffc-microservice.service-account") -}}
@@ -551,13 +574,14 @@ The following values need to be set in the parent chart's `values.yaml` for Azur
 ```yaml
 secretProviderClass:
   azure:
-    clientID: <string> # Client ID for workload identity
     keyvaultName: <string> # Name of the Azure Key Vault
     tenantId: <string> # Azure tenant ID
     objects:
       - objectName: <string> # Name of the secret in Key Vault
         objectType: secret # Type: secret, key, or cert (default: "secret")
         objectVersion: <string> # Specific version (optional, default: latest)
+azureIdentity:
+  clientID: <string> # Client ID for workload identity
 ```
 
 #### Optional values
@@ -584,7 +608,6 @@ secretProviderClass:
 secretProviderClass:
   azure:
     usePodIdentity: "false" # Default: "false" (can be omitted)
-    clientID: "your-client-id" # Setting this to use workload identity
     keyvaultName: "your-keyvault-name" # Set to the name of your key vault
     tenantId: "87654321-4321-4321-4321-210987654321" # Your Azure tenant ID
     objects:
@@ -603,6 +626,9 @@ secretProviderClass:
           key: "DB_PASSWORD"
         - objectName: "api-key"
           key: "API_KEY"
+
+azureIdentity:
+  clientID: "your-client-id" # Client ID used by workload identity
 ```
 
 ### Service template
@@ -612,7 +638,7 @@ secretProviderClass:
 
 A generic K8s `Service` object requiring a service type to be set.
 
-A basic usage of this object template would involve the creation of `templates/secret.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
+A basic usage of this object template would involve the creation of `templates/service.yaml` in the parent Helm chart (e.g. `ffc-microservice`) containing:
 
 ```yaml
 {{- include "ffc-helm-library.service" (list . "ffc-microservice.service") -}}
@@ -633,7 +659,7 @@ service:
 ### Horizontal Pod Autoscaler template
 
 - Template file: `_horizontal-pod-autoscaler.yaml`
-- Template name: `helm-library.horizontal-pod-autoscaler`
+- Template name: `ffc-helm-library.horizontal-pod-autoscaler`
 
 A k8s `HorizontalPodAutoscaler`.
 
@@ -669,10 +695,33 @@ deployment:
   maxReplicas: <integer>
 ```
 
+### KEDA ScaledObject template
+
+- Template file: `_keda.yaml`
+- Template name: `ffc-helm-library.keda-scaled-object`
+
+A KEDA `ScaledObject` targeting the workload with the parent chart's name.
+Create `templates/keda-scaled-object.yaml` in the parent chart and provide the
+trigger configuration in the parent template:
+
+```yaml
+{{- include "ffc-helm-library.keda-scaled-object" (list . "microservice.keda-scaled-object") -}}
+{{- define "microservice.keda-scaled-object" -}}
+spec:
+  triggers:
+    - type: <trigger-type>
+      metadata:
+        <trigger-metadata>
+{{- end -}}
+```
+
+`deployment.minReplicas` and `deployment.maxReplicas` are optional and default
+to `1` and `100` respectively.
+
 ### Vertical Pod Autoscaler template
 
 - Template file: `_vertical-pod-autoscaler.yaml`
-- Template name: `helm-library.vertical-pod-autoscaler`
+- Template name: `ffc-helm-library.vertical-pod-autoscaler`
 
 A k8s `VerticalPodAutoscaler`.
 
@@ -696,7 +745,7 @@ deployment:
 ### Storage Class template
 
 - Template file: `_storage-class.yaml`
-- Template name: `helm-library.storage-class`
+- Template name: `ffc-helm-library.storage-class`
 
 A k8s `StorageClass`.
 
@@ -708,10 +757,26 @@ A basic usage of this object template would involve the creation of `templates/s
 {{- end -}}
 ```
 
+#### Required values
+
+```yaml
+storageClass:
+  name: <string>
+```
+
+#### Optional values
+
+```yaml
+storageClass:
+  provisioner: <string> # defaults to blob.csi.azure.com
+  protocol: <string> # defaults to nfs
+  volumeBindingMode: <string> # defaults to Immediate
+```
+
 ### Persistent Volume template
 
 - Template file: `_persistent-volume.yaml`
-- Template name: `helm-library.persistent-volume`
+- Template name: `ffc-helm-library.persistent-volume`
 
 A k8s `PersistentVolume`.
 
@@ -723,10 +788,26 @@ A basic usage of this object template would involve the creation of `templates/p
 {{- end -}}
 ```
 
+#### Required values
+
+```yaml
+persistentVolume:
+  name: <string>
+  size: <string>
+  storageClassName: <string>
+```
+
+#### Optional values
+
+```yaml
+persistentVolume:
+  reclaimPolicy: <string> # defaults to Retain
+```
+
 ### Persistent Volume Claim template
 
 - Template file: `_persistent-volume-claim.yaml`
-- Template name: `helm-library.persistent-volume-claim`
+- Template name: `ffc-helm-library.persistent-volume-claim`
 
 A k8s `PersistentVolumeClaim`.
 
@@ -736,6 +817,21 @@ A basic usage of this object template would involve the creation of `templates/p
 {{- include "ffc-helm-library.persistent-volume-claim" (list . "microservice.persistent-volume-claim") -}}
 {{- define "microservice.persistent-volume-claim" -}}
 {{- end -}}
+```
+
+#### Required values
+
+```yaml
+persistentVolumeClaim:
+  name: <string>
+  size: <string>
+```
+
+#### Optional values
+
+```yaml
+persistentVolumeClaim:
+  storageClassName: <string> # defaults to an empty string
 ```
 
 ## Helper templates
@@ -754,14 +850,14 @@ A template defining the default message to print when checking for a required va
 - Template name: `ffc-helm-library.labels`
 - Usage: `{{- include "ffc-helm-library.labels" . }}`
 
-Common labels to apply to `metadata` of all K8s objects on the FCP K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
+Common labels to apply to `metadata` of all K8s objects on the FCP K8s platform. Names and release details come from the parent chart and Helm release; `labels.version` and `labels.component` are optional overrides.
 
 ### Selector labels
 
 - Template name: `ffc-helm-library.selector-labels`
 - Usage: `{{- include "ffc-helm-library.selector-labels" . }}`
 
-Common selector labels that can be applied where necessary to K8s objects on the FCP K8s platform. This template relies on the globally required values [listed above](#all-template-required-values).
+Common selector labels that can be applied where necessary to K8s objects on the FCP K8s platform. Names and release details come from the parent chart and Helm release.
 
 ### Http GET probe
 
@@ -803,7 +899,6 @@ The following values need to be passed to the probe in the `<map_of_probe_values
 script: <string>
 initialDelaySeconds: <integer>
 periodSeconds: <integer>
-timeoutSeconds: <integer>
 failureThreshold: <integer>
 ```
 
@@ -812,6 +907,8 @@ failureThreshold: <integer>
 ```yaml
 timeoutSeconds: <integer>
 ```
+
+`timeoutSeconds` defaults to `1`.
 
 ### Cron Job template
 
@@ -829,6 +926,25 @@ A basic usage of this object template would involve the creation of `templates/c
 
 ```
 
+#### Required values
+
+In addition to the [container values](#container-template), set:
+
+```yaml
+cronJob:
+  schedule: <string>
+  concurrencyPolicy: <string>
+```
+
+#### Optional values
+
+```yaml
+cronJob:
+  restartPolicy: <string> # defaults to Always
+  runAsUser: <integer> # defaults to 1000
+  runAsNonRoot: <boolean> # defaults to true
+```
+
 ### StatefulSet template
 
 - Template file: `_statefulset.yaml`
@@ -843,6 +959,9 @@ A basic usage of this object template would involve the creation of `templates/s
 {{- define "microservice.deployment" -}}
 {{- end -}}
 ```
+
+The StatefulSet uses the same container, deployment, service-account, workload
+identity and SecretProviderClass values described for the Deployment template.
 
 ## Licence
 

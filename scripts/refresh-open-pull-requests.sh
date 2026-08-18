@@ -18,7 +18,8 @@ while IFS=$'\t' read -r pr_number head_ref; do
     echo "Refreshing PR #$pr_number from $head_ref"
     gh workflow run publish.yml \
       --repo "$GITHUB_REPOSITORY" \
-      --ref "$head_ref" \
-      -f channel=beta
+      --ref master \
+      -f channel=beta \
+      -f "pr_number=$pr_number"
   fi
 done <<< "$pull_requests"
