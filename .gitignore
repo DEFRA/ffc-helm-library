@@ -1,1 +1,5 @@
 *.tgz
+token.md
+.pytest_cache/
+__pycache__/
+test-results/

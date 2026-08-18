@@ -1,0 +1,11 @@
+apiVersion: v1
+entries:
+  another-chart:
+    - name: another-chart
+      version: 5.2.2-beta.42
+  ffc-helm-library:
+    - name: ffc-helm-library
+      version: 5.2.2-beta.42
+    - name: ffc-helm-library
+      version: 5.2.1
+generated: "2026-08-17T12:00:00Z"

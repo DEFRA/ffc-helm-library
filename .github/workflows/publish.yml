@@ -1,0 +1,295 @@
+name: Package and publish Helm library
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Package channel; auto selects from the event and branch.
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - alpha
+          - beta
+          - release
+      pr_number:
+        description: Internal use; refresh a PR through the trusted master workflow.
+        required: false
+        default: ''
+        type: string
+  pull_request_target:
+    branches:
+      - master
+  merge_group:
+    types:
+      - checks_requested
+  push:
+    paths:
+      - ffc-helm-library/**
+      - tests/**
+      - scripts/**
+      - .github/workflows/publish.yml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: helm-library-publish
+  cancel-in-progress: false
+
+jobs:
+  decide-build:
+    name: Decide whether to package
+    runs-on: ubuntu-24.04
+    outputs:
+      should_package: ${{ steps.decision.outputs.should_package }}
+      source_sha: ${{ steps.context.outputs.source_sha }}
+      source_ref: ${{ steps.context.outputs.source_ref }}
+      base_ref: ${{ steps.context.outputs.base_ref }}
+      pr_number: ${{ steps.context.outputs.pr_number }}
+      trusted_ref: ${{ steps.context.outputs.trusted_ref }}
+    steps:
+      - name: Check out pipeline scripts
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve source and trusted refs
+        id: context
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REQUESTED_PR_NUMBER: ${{ inputs.pr_number }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/resolve-source-context.sh
+
+      - name: Decide whether this event needs a chart build
+        id: decision
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          PR_NUMBER: ${{ steps.context.outputs.pr_number }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/decide-build.sh
+
+  test:
+    name: Test Helm chart
+    needs: decide-build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: No chart package required
+        if: needs.decide-build.outputs.should_package != 'true'
+        run: echo 'Tests will run, but this event does not require another chart package.'
+
+      - name: Check out source under test
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ needs.decide-build.outputs.source_sha }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install test framework
+        run: bash scripts/install-test-dependencies.sh
+
+      - name: Read and validate chart version
+        id: chart
+        env:
+          CHART_DIRECTORY: ffc-helm-library
+        run: bash scripts/validate-chart-version.sh
+
+      - name: Select package channel
+        id: channel
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REQUESTED_CHANNEL: ${{ inputs.channel || 'auto' }}
+        run: bash scripts/select-package-channel.sh
+
+      - name: Run test framework
+        env:
+          TEST_RESULTS_DIRECTORY: ${{ runner.temp }}/test-results
+        run: bash scripts/run-tests.sh
+
+      - name: Add test results to job summary
+        if: always()
+        env:
+          TEST_RESULTS_FILE: ${{ runner.temp }}/test-results/pytest.xml
+        run: python3 scripts/summarize-test-results.py
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ github.run_number }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/test-results/pytest.xml
+          if-no-files-found: warn
+
+  package-and-publish:
+    name: Package and publish chart
+    needs:
+      - decide-build
+      - test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: No chart package required
+        if: >-
+          needs.decide-build.outputs.should_package != 'true' ||
+          github.event_name == 'merge_group'
+        run: echo 'This event is validation-only and does not require a chart package.'
+
+      - name: Check out trusted publisher scripts
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          ref: ${{ needs.decide-build.outputs.trusted_ref }}
+          path: trusted
+
+      - name: Check out chart source
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ needs.decide-build.outputs.source_sha }}
+          path: source
+
+      - name: Set up Helm
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        uses: azure/setup-helm@v5
+
+      - name: Set up Python
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Read and validate chart version for publication
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        id: publish-chart
+        env:
+          CHART_DIRECTORY: source/ffc-helm-library
+        run: bash trusted/scripts/validate-chart-version.sh
+
+      - name: Select publication channel
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group'
+        id: publish-channel
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ needs.decide-build.outputs.source_ref }}
+          REQUESTED_CHANNEL: ${{ inputs.channel || 'auto' }}
+        run: bash trusted/scripts/select-package-channel.sh
+
+      - name: Verify publisher token permissions
+        if: needs.decide-build.outputs.should_package == 'true' && github.event_name != 'merge_group'
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+          PUBLISHER_REPOSITORIES: DEFRA/ffc-helm-library DEFRA/ffc-helm-repository
+        run: bash trusted/scripts/verify-publisher-token.sh
+
+      - name: Prepare chart version
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group' &&
+          needs.decide-build.outputs.source_ref != 'master'
+        id: version
+        working-directory: source
+        env:
+          BASE_REF: ${{ needs.decide-build.outputs.base_ref }}
+          HEAD_REF: ${{ needs.decide-build.outputs.source_ref }}
+          CHART_DIRECTORY: ffc-helm-library
+          CURRENT_VERSION: ${{ steps.publish-chart.outputs.version }}
+          PUBLISH_ENABLED: ${{ vars.HELM_PUBLISH_ENABLED == 'true' }}
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: bash ../trusted/scripts/prepare-chart-version.sh
+
+      - name: Package chart
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true'
+        id: package
+        env:
+          CHART_DIRECTORY: source/ffc-helm-library
+          CHART_VERSION: ${{ steps.version.outputs.version || steps.publish-chart.outputs.version }}
+          CHANNEL: ${{ steps.publish-channel.outputs.channel }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: bash trusted/scripts/package-chart.sh
+
+      - name: Publish chart and update index
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true' &&
+          vars.HELM_PUBLISH_ENABLED == 'true'
+        env:
+          CHART_FILE: ${{ steps.package.outputs.file }}
+          CHART_NAME: ${{ steps.package.outputs.name }}
+          CHART_REPOSITORY: DEFRA/ffc-helm-repository
+          CHART_REPOSITORY_BRANCH: master
+          CHART_REPOSITORY_URL: https://raw.githubusercontent.com/defra/ffc-helm-repository/master/
+          CHART_VERSION: ${{ steps.package.outputs.version }}
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: bash trusted/scripts/publish-chart.sh
+
+      - name: Upload dry-run chart package
+        if: >-
+          needs.decide-build.outputs.should_package == 'true' &&
+          github.event_name != 'merge_group' &&
+          steps.version.outputs.changed != 'true' &&
+          vars.HELM_PUBLISH_ENABLED != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: helm-chart-${{ steps.package.outputs.version }}
+          path: ${{ steps.package.outputs.file }}
+          if-no-files-found: error
+
+  refresh-open-pull-requests:
+    name: Refresh open chart pull requests
+    if: >-
+      github.event_name == 'push' &&
+      github.ref_name == 'master' &&
+      vars.HELM_PUBLISH_ENABLED == 'true'
+    needs: package-and-publish
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out pipeline scripts
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Re-run chart pull requests against the new master
+        env:
+          GH_TOKEN: ${{ secrets.FFC_HELM_REPOSITORY_TOKEN }}
+        run: bash scripts/refresh-open-pull-requests.sh

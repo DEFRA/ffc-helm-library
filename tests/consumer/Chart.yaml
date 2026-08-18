@@ -1,0 +1,9 @@
+apiVersion: v2
+name: helm-library-consumer
+description: Test consumer for the FFC Helm library
+type: application
+version: 0.1.0
+dependencies:
+  - name: ffc-helm-library
+    version: ">=0.0.0-0"
+    repository: file://../../ffc-helm-library

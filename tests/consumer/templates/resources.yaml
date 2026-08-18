@@ -1,0 +1,57 @@
+{{ include "ffc-helm-library.deployment" (list . "helm-library-consumer.deployment") }}
+---
+{{ include "ffc-helm-library.cluster-ip-service" (list . "helm-library-consumer.cluster-ip-service") }}
+---
+{{ include "ffc-helm-library.container-config-map" (list . "helm-library-consumer.config-map") }}
+---
+{{ include "ffc-helm-library.container-secret" (list . "helm-library-consumer.container-secret") }}
+---
+{{ include "ffc-helm-library.horizontal-pod-autoscaler" (list . "helm-library-consumer.horizontal-pod-autoscaler") }}
+---
+{{ include "ffc-helm-library.ingress" (list . "helm-library-consumer.ingress") }}
+---
+{{ include "ffc-helm-library.service-account" (list . "helm-library-consumer.service-account") }}
+---
+{{ include "ffc-helm-library.secret-provider-class" (list . "helm-library-consumer.secret-provider-class") }}
+
+{{- define "helm-library-consumer.deployment" -}}
+{{- end -}}
+
+{{- define "helm-library-consumer.container" -}}
+env:
+  - name: TEST_MODE
+    value: "true"
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+{{- end -}}
+
+{{- define "helm-library-consumer.cluster-ip-service" -}}
+{{- end -}}
+
+{{- define "helm-library-consumer.config-map" -}}
+data:
+  LOG_LEVEL: info
+{{- end -}}
+
+{{- define "helm-library-consumer.container-secret" -}}
+data:
+  TEST_TOKEN: dGVzdA==
+{{- end -}}
+
+{{- define "helm-library-consumer.horizontal-pod-autoscaler" -}}
+{{- end -}}
+
+{{- define "helm-library-consumer.ingress" -}}
+{{- end -}}
+
+{{- define "helm-library-consumer.service-account" -}}
+{{- end -}}
+
+{{- define "helm-library-consumer.secret-provider-class" -}}
+{{- end -}}
